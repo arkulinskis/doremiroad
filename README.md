@@ -1,88 +1,88 @@
-# About This [Anvil](https://anvil.works/?utm_source=github:app_README) App
+# Doremi Road
 
-### Build web apps with nothing but Python.
+A piano-learning game for [anvil.works](https://anvil.works). You travel a road across the **Realm of Harmony**, a map of musical knowledge. Each territory teaches one part of music; every level you clear claims one of its provinces in your banner colour, and clearing them all conquers the territory and opens the next.
 
-The app in this repository is built with [Anvil](https://anvil.works?utm_source=github:app_README), the framework for building web apps with nothing but Python. You can clone this app into your own Anvil account to use and modify.
+- **App repo:** github.com/arkulinskis/doremiroad (branch `master`). Anvil pulls `master`.
+- **Level editor:** open the app with `#admin` at the end of the URL.
 
-Below, you will find:
-- [How to open this app](#opening-this-app-in-anvil-and-getting-it-online) in Anvil and deploy it online
-- Information [about Anvil](#about-anvil)
-- And links to some handy [documentation and tutorials](#tutorials-and-documentation)
+## Playing
 
-## Opening this app in Anvil and getting it online
+Play with a **MIDI keyboard** (Web MIDI: Chrome or Edge), the **computer keyboard** (`Z`–`M` and `Q`–`U` are two octaves, black keys on the row above, `↑`/`↓` shift octave) or the **mouse/touch**. By default any octave counts; steps marked "exact" need the right octave.
 
-### Cloning the app
+**Challenge types** (a level is a list of steps):
 
-Go to the [Anvil Editor](https://anvil.works/build?utm_source=github:app_README) (you might need to sign up for a free account) and click on “Clone from GitHub” (underneath the “Blank App” option):
+| Step | What the player does |
+|---|---|
+| 📖 Lesson | Reads a short explanation; the keys (and optionally a staff) light up; "Hear it". Not scored. |
+| 🎹 Notes | Plays notes in turn, shown as lit keys, names, labels ("a 5th above C") or on a treble/bass staff. |
+| 🎼 Chords | Plays chords by symbol (C, Am, G7, Bdim…) or exact shapes (E4+G4+C5). Inversions count unless exact. |
+| 🧭 Progression | Plays chords from Roman numerals in a key (I–V–vi–IV in G, ii7–V7–Imaj7 in B♭…). |
+| ⚡ Rush | Guitar Hero style: notes and chords fall onto the keys in time. Perfect/great/good/miss, combo, a harmony meter that fails you if it empties. Count-in and metronome. |
+| 👂 Ear | Hear a note and play it, or hear a chord/interval and pick its name. |
+| ❓ Quiz | Multiple-choice theory question with an explanation. |
 
-<img src="https://anvil.works/docs/version-control/img/git/clone-from-github.png" alt="Clone from GitHub"/>
+Accuracy across the level decides the result: 60% clears, 80% two stars, 95% three (the editor can change these per level).
 
-Enter the URL of this GitHub repository. If you're not yet logged in, choose "GitHub credentials" as the authentication method and click "Connect to GitHub".
+## The road
 
-<img src="https://anvil.works/docs/version-control/img/git/clone-app-from-git.png" alt="Clone App from Git modal"/>
+9 territories, 42 levels: Ivory Shore (the keyboard, note names, octaves, first songs), Sharpwood (sharps and flats, half and whole steps), Major Highlands (major scales, intervals, pentatonic), Triad Vale (major and minor chords, inversions), Minor Marsh (minor scales, relative keys, diminished and augmented), Progression Pass (Roman numerals, cadences, pop/doo-wop/canon progressions), Staff Citadel (treble and bass clef reading, ledger lines), Blue Bayou (seventh chords, blues scale, twelve-bar blues, ii–V–I) and Circle Summit (circle of fifths, key signatures, modes, the final trial). Each territory ends in a Trial. Songs used are traditional or public domain (Ode to Joy, Für Elise, Greensleeves, Amazing Grace, Minuet in G…).
 
-Finally, click "Clone App".
+## Things to collect
 
-This app will then be in your Anvil account, ready for you to run it or start editing it! **Any changes you make will be automatically pushed back to this repository, if you have permission!** You might want to [make a new branch](https://anvil.works/docs/version-control?utm_source=github:app_README).
+1. **Provinces and territories** on the knowledge map, in your banner colour; a flag when conquered, a gold border when mastered (three stars everywhere).
+2. **Codex**: 42 theory pages, each unlocked by the level that teaches it, with an example you can hear.
+3. **Composer cards**: 20 (common → legendary), from first clears and three-star clears of certain levels, and as daily-practice drops. Duplicates sell for ducats.
+4. **Territory crests**.
+5. **32 badges**.
+6. **Stars** (3 per level) and **ranks** by XP: Novice → Busker → Apprentice → Chorister → Accompanist → Soloist → Virtuoso → Maestro → Legend.
+7. **Shop** (paid in ducats): 7 keyboard skins, 5 note trails for rushes, 7 map banners.
+8. **Daily Practice**: a new generated level every day (harder as you conquer more), streak bonus, card chance.
 
-### Running the app yourself:
+Also: per-level leaderboards (signed-in players), a **Practice Room** that names any chord you play and can light up any scale or chord, with a metronome, and settings for sounds, key labels and MIDI.
 
-Find the **Run** button at the top-right of the Anvil editor:
+**Accounts.** Anyone can play as a guest; progress is kept in the browser. Creating an account (email + password, Anvil Users service) saves progress on the server and brings the guest progress along.
 
-<img src="https://anvil.works/docs/img/run-button-new-ide.png"/>
+## Level editor (`#admin`)
 
+Sign in with an admin account. **Levels**: every territory's levels, reorder (▲▼), create (＋), edit name/territory/intro/thresholds/codex pages/composer cards/trial flag, and the steps, each with its own fields and a live preview (resolved chords for numerals, note counts and length for rushes, ▶ to hear it). Live checks match the server's. **Playtest** runs the unsaved level in the real engine. A level with errors is saved as a draft. Built-in levels can be put back with "↺ Original"; "Restore missing built-in levels" re-adds deleted ones. Raw JSON editing is available. **Territories**: name, emoji, blurb, colour, map position (with a live map preview), order, publish. **Players**: progress overview and admin rights.
 
-### Publishing the app on your own URL
+**Admins.** `arkulinskis@gmail.com` becomes an admin the first time it signs in (`ADMIN_EMAILS` in `server_code/Game.py`). Tick `is_admin` in the users table, or use the Players tab, to add more.
 
-Now you've cloned the app, you can [deploy it on the internet with two clicks](https://anvil.works/docs/deployment/quickstart?utm_source=github:app_README)! Find the **Publish** button at the top-right of the editor:
+## Project layout
 
-<img src="https://anvil.works/docs/deployment/img/environments/publish-button.png"/>
+```
+native_libraries.html   fonts, colour tokens, window.DR helpers (bridge, modal, toast), the synthesized piano + sounds, input (MIDI/keys/mouse)
+lib/music.js            music theory in the browser (same rules as server_code/Music.py), chord detection, staff positions
+lib/art.js              the knowledge map, music staves, crests, composer medallions, the title scene
+lib/engine.js           DR.Keyboard (on-screen piano) and DR.Stage (runs a level: every step type, scoring, rush highway)
+forms/GamePage.html     the player app: title, sign-in, map, level card, play, results, codex, collection, practice room, badges, shop, settings
+forms/AdminPage.html    admin sign-in + level editor + territories + players
+forms/Main.html         the startup form (#admin → AdminPage, else GamePage)
+client_code/*.py        thin Anvil forms; dr_ui.py is the JS⇄Python bridge, server-call whitelist and sign-in
+server_code/Music.py    note names, chord symbols, Roman numerals, rush sequences
+server_code/Catalog.py  codex pages, composer cards, shop items, badges, ranks, rewards
+server_code/Levels.py   the level format, its checks, the daily practice generator, and the 42 built-in levels
+server_code/Game.py     player callables + guest_* twins; all rules (scoring, unlocking, conquest, rewards, shop, daily)
+server_code/Admin.py    the level editor's callables (admin only)
+tools/                  sync/deploy to Anvil, tests, local dev server
+```
 
-When you click it, you will see the Publish dialog:
+Tables (all server-only): `users` (+ display_name, is_admin, progress, last_played), `territories`, `levels` (data is a Simple Object), `scores`. The built-in road is added to the tables the first time anyone loads the game.
 
-<img src="https://anvil.works/docs/deployment/img/quickstart/empty-environments-dialog.png"/>
+The server checks every result: the item count must match the level, hits and stats are capped by what the level holds, and the accuracy must reach the level's pass mark.
 
-Click **Publish This App**, and you will see that your app has been deployed at a new, public URL:
+## Working on it
 
-<img src="https://anvil.works/docs/deployment/img/quickstart/default-public-environment.png"/>
+```
+python -I tools/check.py --ui                    # syntax, server tests, JS/Python parity, headless-Chrome tests → ALL CHECKS PASSED
+python -I tools/preview/devserver.py 8765        # local game at http://localhost:8765/ (?as=ana, ?as=admin#admin)
+python tools/deploy.py                           # dry run (needs PyYAML, so no -I)
+python tools/deploy.py --push "Message"          # deploy: commit + push to GitHub, Anvil pulls it
+```
 
-That's it - **your app is now online**. Click the link and try it!
+## After the first deploy
 
-## About Anvil
-
-If you’re new to Anvil, welcome! Anvil is a platform for building full-stack web apps with nothing but Python. No need to wrestle with JS, HTML, CSS, Python, SQL and all their frameworks – just build it all in Python.
-
-<figure>
-<figcaption><h3>Learn About Anvil In 80 Seconds👇</h3></figcaption>
-<a href="https://www.youtube.com/watch?v=3V-3g1mQ5GY" target="_blank">
-<img
-  src="https://anvil-website-static.s3.eu-west-2.amazonaws.com/anvil-in-80-seconds-YouTube.png"
-  alt="Anvil In 80 Seconds"
-/>
-</a>
-</figure>
-<br><br>
-
-[![Try Anvil Free](https://anvil-website-static.s3.eu-west-2.amazonaws.com/mark-complete.png)](https://anvil.works?utm_source=github:app_README)
-
-To learn more about Anvil, visit [https://anvil.works](https://anvil.works?utm_source=github:app_README).
-
-## Tutorials and documentation
-
-### Tutorials
-
-If you are just starting out with Anvil, why not **[try the 10-minute Feedback Form tutorial](https://anvil.works/learn/tutorials/feedback-form?utm_source=github:app_README)**? It features step-by-step tutorials that will introduce you to the most important parts of Anvil.
-
-Anvil has tutorials on:
-- [Building Dashboards](https://anvil.works/learn/tutorials/data-science#dashboarding?utm_source=github:app_README)
-- [Multi-User Applications](https://anvil.works/learn/tutorials/multi-user-apps?utm_source=github:app_README)
-- [Building Web Apps with an External Database](https://anvil.works/learn/tutorials/external-database?utm_source=github:app_README)
-- [Deploying Machine Learning Models](https://anvil.works/learn/tutorials/deploy-machine-learning-model?utm_source=github:app_README)
-- [Taking Payments with Stripe](https://anvil.works/learn/tutorials/stripe?utm_source=github:app_README)
-- And [much more....](https://anvil.works/learn/tutorials?utm_source=github:app_README)
-
-### Reference Documentation
-
-The Anvil reference documentation provides comprehensive information on how to use Anvil to build web applications. You can find the documentation [here](https://anvil.works/docs/overview?utm_source=github:app_README).
-
-If you want to get to the basics as quickly as possible, each section of this documentation features a [Quick-Start Guide](https://anvil.works/docs/overview/quickstarts?utm_source=github:app_README).
+1. Open the app in the Anvil editor. It shows a **Schema Mismatch** alert: choose **"The schema of the source code is correct"** so Anvil creates the tables.
+2. Check the **Users** service is listed (the deploy adds it: email sign-in, sign-up allowed, no email confirmation).
+3. Run the app and create an account with **arkulinskis@gmail.com** soon: email confirmation is off, so whoever first registers that email gets admin.
+4. Optional: turn on email confirmation in the Users service, and pick a nicer app URL under Publish.
