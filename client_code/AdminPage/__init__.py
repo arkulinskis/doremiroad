@@ -5,7 +5,7 @@ from anvil import *
 import anvil.server
 import anvil.users
 
-from .. import dr_ui
+from .. import dr_ui, legal
 
 
 class AdminPage(AdminPageTemplate):
@@ -30,6 +30,7 @@ class AdminPage(AdminPageTemplate):
             return dr_ui.auth(event, p)
         if event == "logout":
             anvil.users.logout()
+            legal.signed_out()
             return {"ok": True}
         if event == "game":
             get_open_form().open_game()
