@@ -1,9 +1,13 @@
 allow_embedding: false
-name: Scratch 1
-package_name: Scratch_1
+metadata: {title: Doremi Road}
+name: Doremi Road
+package_name: Doremi_Road
 runtime_options:
   client_version: '3'
   server_spec: {base: python314}
   version: 3
-services: []
+services:
+- client_config: {enable_v2: true}
+  server_config: {}
+  source: /runtime/services/tables.yml
 startup: {module: Form1, type: form}
