@@ -329,18 +329,25 @@ native_deps:
     \ String(d.getDate()).padStart(2, '0');\n  };\n  DR.isTouch = function () { return ('ontouchstart' in window) || navigator.maxTouchPoints\
     \ > 0; };\n  DR.fmt = function (n) { return Math.round(n).toLocaleString('en-US'); };\n\n  /* Player settings, kept in\
     \ this browser. */\n  var SETTINGS_DEFAULT = { sfx: true, ambient: true, keySound: true, midiSound: false, labels: 'c',\
-    \ letters: true, volume: 0.8, metronome: true };\n  DR.settings = Object.assign({}, SETTINGS_DEFAULT, DR.store.get('dr.settings',\
-    \ {}));\n  DR.saveSettings = function () { DR.store.set('dr.settings', DR.settings); };\n\n  DR.toast = function (msg,\
-    \ kind) {\n    var box = document.querySelector('.dr-toasts');\n    if (!box) { box = document.createElement('div'); box.className\
-    \ = 'dr dr-toasts'; document.body.appendChild(box); }\n    var t = document.createElement('div');\n    t.className = 'dr-toast'\
-    \ + (kind === true || kind === 'err' ? ' err' : kind === 'gold' ? ' gold' : '');\n    t.innerHTML = msg;\n    box.appendChild(t);\n\
-    \    setTimeout(function () { t.style.transition = 'opacity .3s, transform .3s'; t.style.opacity = '0'; t.style.transform\
-    \ = 'translateY(-8px)'; }, 2800);\n    setTimeout(function () { t.remove(); }, 3200);\n  };\n\n  // DR.modal(html, {onClose,\
-    \ cls, noClose}) → {el, close}. Clicking the backdrop or × closes it.\n  DR.modal = function (html, opts) {\n    opts\
-    \ = opts || {};\n    var bg = document.createElement('div');\n    bg.className = 'dr dr-modal-bg';\n    bg.innerHTML =\
-    \ '<div class=\"dr-card dr-modal ' + (opts.cls || '') + '\" role=\"dialog\">' + (opts.noClose ? '' : '<button class=\"\
-    dr-x\" aria-label=\"Close\">✕</button>') + html + '</div>';\n    document.body.appendChild(bg);\n    var closed = false;\n\
-    \    function close() {\n      if (closed) return; closed = true;\n      bg.remove();\n      document.removeEventListener('keydown',\
+    \ letters: true, volume: 0.8, metronome: true, touch: 'auto' };\n  DR.settings = Object.assign({}, SETTINGS_DEFAULT, DR.store.get('dr.settings',\
+    \ {}));\n  DR.saveSettings = function () { DR.store.set('dr.settings', DR.settings); };\n\n  /* Touch-screen piano: bigger\
+    \ keys, tap hints instead of computer-key hints, octave buttons.\n     settings.touch: 'auto' (when the main pointer is\
+    \ a finger: tablets, phones), 'on' or 'off'. <html> gets .dr-touch. */\n  var coarse = null;\n  try { coarse = window.matchMedia('(pointer:\
+    \ coarse)'); } catch (e) {}\n  DR.touchUI = function () {\n    var t = DR.settings.touch;\n    if (t === 'on') return\
+    \ true;\n    if (t === 'off') return false;\n    return coarse ? coarse.matches : DR.isTouch();\n  };\n  DR.applyTouch\
+    \ = function () {\n    document.documentElement.classList.toggle('dr-touch', DR.touchUI());\n    if (DR.Input) DR.Input.setBase(DR.Input.base);\
+    \   // tells keyboards and hint lines to redraw\n  };\n  DR.applyTouch();\n  // an iPad that gets a trackpad (or loses\
+    \ it) switches by itself\n  if (coarse) { try { coarse.addEventListener('change', DR.applyTouch); } catch (e) {} }\n\n\
+    \  DR.toast = function (msg, kind) {\n    var box = document.querySelector('.dr-toasts');\n    if (!box) { box = document.createElement('div');\
+    \ box.className = 'dr dr-toasts'; document.body.appendChild(box); }\n    var t = document.createElement('div');\n    t.className\
+    \ = 'dr-toast' + (kind === true || kind === 'err' ? ' err' : kind === 'gold' ? ' gold' : '');\n    t.innerHTML = msg;\n\
+    \    box.appendChild(t);\n    setTimeout(function () { t.style.transition = 'opacity .3s, transform .3s'; t.style.opacity\
+    \ = '0'; t.style.transform = 'translateY(-8px)'; }, 2800);\n    setTimeout(function () { t.remove(); }, 3200);\n  };\n\
+    \n  // DR.modal(html, {onClose, cls, noClose}) → {el, close}. Clicking the backdrop or × closes it.\n  DR.modal = function\
+    \ (html, opts) {\n    opts = opts || {};\n    var bg = document.createElement('div');\n    bg.className = 'dr dr-modal-bg';\n\
+    \    bg.innerHTML = '<div class=\"dr-card dr-modal ' + (opts.cls || '') + '\" role=\"dialog\">' + (opts.noClose ? '' :\
+    \ '<button class=\"dr-x\" aria-label=\"Close\">✕</button>') + html + '</div>';\n    document.body.appendChild(bg);\n \
+    \   var closed = false;\n    function close() {\n      if (closed) return; closed = true;\n      bg.remove();\n      document.removeEventListener('keydown',\
     \ onKey, true);\n      if (opts.onClose) opts.onClose();\n    }\n    function onKey(e) { if (e.key === 'Escape' && !opts.noClose)\
     \ { e.stopPropagation(); close(); } }\n    document.addEventListener('keydown', onKey, true);\n    bg.addEventListener('click',\
     \ function (e) {\n      if ((e.target === bg && !opts.noClose) || (e.target.closest && e.target.closest('.dr-x'))) { DR.Sound.sfx('click');\
@@ -348,48 +355,50 @@ native_deps:
     \ Sound: a synthesized piano, effects, a metronome and soft ambience (no audio files) ---------- */\n  var Sound = DR.Sound\
     \ = { ctx: null, voices: {}, order: [] };\n  Sound.init = function () {\n    if (Sound.ctx) { if (Sound.ctx.state ===\
     \ 'suspended') Sound.ctx.resume(); return Sound.ctx; }\n    var AC = window.AudioContext || window.webkitAudioContext;\n\
-    \    if (!AC) return null;\n    try {\n      var c = Sound.ctx = new AC({ latencyHint: 'interactive' });\n      Sound.master\
-    \ = c.createGain(); Sound.master.gain.value = DR.settings.volume;\n      var comp = c.createDynamicsCompressor(); comp.threshold.value\
-    \ = -14; comp.ratio.value = 3;\n      Sound.master.connect(comp); comp.connect(c.destination);\n      // a small synthetic\
-    \ room\n      var len = Math.floor(c.sampleRate * 1.8), imp = c.createBuffer(2, len, c.sampleRate);\n      for (var ch\
-    \ = 0; ch < 2; ch++) { var d = imp.getChannelData(ch); for (var i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) *\
-    \ Math.pow(1 - i / len, 3.2); }\n      Sound.verb = c.createConvolver(); Sound.verb.buffer = imp;\n      var wet = c.createGain();\
-    \ wet.gain.value = 0.22; Sound.verb.connect(wet); wet.connect(Sound.master);\n      Sound.piano = c.createGain(); Sound.piano.gain.value\
+    \    if (!AC) return null;\n    // iPhone/iPad: play even when the silent switch is on (Safari 17+), like a music app\n\
+    \    try { if (navigator.audioSession) navigator.audioSession.type = 'playback'; } catch (e) {}\n    try {\n      var\
+    \ c = Sound.ctx = new AC({ latencyHint: 'interactive' });\n      Sound.master = c.createGain(); Sound.master.gain.value\
+    \ = DR.settings.volume;\n      var comp = c.createDynamicsCompressor(); comp.threshold.value = -14; comp.ratio.value =\
+    \ 3;\n      Sound.master.connect(comp); comp.connect(c.destination);\n      // a small synthetic room\n      var len =\
+    \ Math.floor(c.sampleRate * 1.8), imp = c.createBuffer(2, len, c.sampleRate);\n      for (var ch = 0; ch < 2; ch++) {\
+    \ var d = imp.getChannelData(ch); for (var i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len,\
+    \ 3.2); }\n      Sound.verb = c.createConvolver(); Sound.verb.buffer = imp;\n      var wet = c.createGain(); wet.gain.value\
+    \ = 0.22; Sound.verb.connect(wet); wet.connect(Sound.master);\n      Sound.piano = c.createGain(); Sound.piano.gain.value\
     \ = 0.9; Sound.piano.connect(Sound.master); Sound.piano.connect(Sound.verb);\n      Sound.fx = c.createGain(); Sound.fx.gain.value\
     \ = 0.55; Sound.fx.connect(Sound.master);\n      Sound.amb = c.createGain(); Sound.amb.gain.value = 0.32; Sound.amb.connect(Sound.master);\
-    \ Sound.amb.connect(Sound.verb);\n    } catch (e) { Sound.ctx = null; }\n    return Sound.ctx;\n  };\n  ['pointerdown',\
-    \ 'keydown', 'touchstart'].forEach(function (ev) {\n    window.addEventListener(ev, function () { Sound.init(); if (Sound.wantAmbient)\
-    \ Sound.ambient(Sound.wantAmbient); }, { passive: true });\n  });\n  Sound.setVolume = function (v) { DR.settings.volume\
-    \ = v; DR.saveSettings(); if (Sound.master) Sound.master.gain.value = v; };\n  function freq(m) { return 440 * Math.pow(2,\
-    \ (m - 69) / 12); }\n\n  // One piano-ish voice: a few partials with a falling filter, a hammer tick and a pitch-dependent\
-    \ decay.\n  function voice(midi, vel, when, dest) {\n    var c = Sound.ctx, f = freq(midi), t = when || c.currentTime;\n\
-    \    var g = c.createGain(), filt = c.createBiquadFilter();\n    var v = 0.18 + 0.32 * (vel == null ? 0.75 : vel);\n \
-    \   var decay = Math.max(0.35, Math.min(2.6, 1.5 * Math.pow(2, -(midi - 60) / 22)));\n    filt.type = 'lowpass'; filt.Q.value\
-    \ = 0.7;\n    filt.frequency.setValueAtTime(Math.min(12000, f * 9), t);\n    filt.frequency.setTargetAtTime(Math.min(6000,\
-    \ f * 2.6), t + 0.01, decay * 0.35);\n    g.gain.setValueAtTime(0.0001, t);\n    g.gain.linearRampToValueAtTime(v, t +\
-    \ 0.006);\n    g.gain.setTargetAtTime(v * 0.42, t + 0.008, 0.09);\n    g.gain.setTargetAtTime(0.0001, t + 0.12, decay);\n\
-    \    filt.connect(g); g.connect(dest || Sound.piano);\n    var parts = [[1, 'triangle', 1], [1.0015, 'sawtooth', 0.12],\
-    \ [2, 'sine', 0.32], [3, 'sine', 0.1], [4.02, 'sine', 0.04]];\n    var oscs = parts.map(function (p) {\n      var o =\
-    \ c.createOscillator(), og = c.createGain();\n      o.type = p[1]; o.frequency.value = f * p[0]; og.gain.value = p[2];\n\
-    \      o.connect(og); og.connect(filt); o.start(t); return o;\n    });\n    // hammer\n    var n = Math.floor(c.sampleRate\
-    \ * 0.03), buf = c.createBuffer(1, n, c.sampleRate), d = buf.getChannelData(0);\n    for (var i = 0; i < n; i++) d[i]\
-    \ = (Math.random() * 2 - 1) * (1 - i / n);\n    var src = c.createBufferSource(), bp = c.createBiquadFilter(), hg = c.createGain();\n\
-    \    src.buffer = buf; bp.type = 'bandpass'; bp.frequency.value = Math.min(8000, f * 5); hg.gain.value = v * 0.35;\n \
-    \   src.connect(bp); bp.connect(hg); hg.connect(dest || Sound.piano); src.start(t);\n    var stopAt = t + decay * 5 +\
-    \ 0.3;\n    oscs.forEach(function (o) { o.stop(stopAt); });\n    return { g: g, oscs: oscs, release: function (at) {\n\
-    \      var tt = Math.max(at || c.currentTime, t + 0.02);\n      g.gain.cancelScheduledValues(tt); g.gain.setTargetAtTime(0.0001,\
-    \ tt, 0.07);\n      oscs.forEach(function (o) { try { o.stop(tt + 0.6); } catch (e) {} });\n    } };\n  }\n  Sound.noteOn\
-    \ = function (midi, vel) {\n    if (!Sound.init()) return;\n    if (Sound.voices[midi]) Sound.voices[midi].release();\n\
-    \    Sound.voices[midi] = voice(midi, vel);\n    Sound.order.push(midi);\n    if (Sound.order.length > 28) { var old =\
-    \ Sound.order.shift(); if (Sound.voices[old] && old !== midi) { Sound.voices[old].release(); delete Sound.voices[old];\
-    \ } }\n  };\n  Sound.noteOff = function (midi) {\n    var v = Sound.voices[midi];\n    if (v) { v.release(); delete Sound.voices[midi];\
-    \ }\n  };\n  // Play notes for listening: items are MIDI numbers or arrays (chords). Returns the duration in seconds.\n\
-    \  Sound.play = function (items, opts) {\n    if (!Sound.init()) return 0;\n    opts = opts || {};\n    var gap = opts.gap\
-    \ || 0.55, dur = opts.dur || gap * 0.95, t = Sound.ctx.currentTime + 0.05;\n    items.forEach(function (it, i) {\n   \
-    \   var group = Array.isArray(it) ? it : [it];\n      group.forEach(function (m, j) {\n        var at = t + i * gap +\
-    \ (opts.roll ? j * 0.03 : 0);\n        var vv = voice(m, opts.vel || 0.7, at);\n        vv.release(at + dur);\n      });\n\
-    \    });\n    return items.length * gap;\n  };\n\n  function tone(f, start, dur, type, vol, slideTo, dest) {\n    var\
-    \ c = Sound.ctx, o = c.createOscillator(), g = c.createGain();\n    o.type = type || 'sine';\n    o.frequency.setValueAtTime(f,\
+    \ Sound.amb.connect(Sound.verb);\n    } catch (e) { Sound.ctx = null; }\n    return Sound.ctx;\n  };\n  // (older iOS\
+    \ only unlocks audio on touchend)\n  ['pointerdown', 'keydown', 'touchstart', 'touchend'].forEach(function (ev) {\n  \
+    \  window.addEventListener(ev, function () { Sound.init(); if (Sound.wantAmbient) Sound.ambient(Sound.wantAmbient); },\
+    \ { passive: true });\n  });\n  Sound.setVolume = function (v) { DR.settings.volume = v; DR.saveSettings(); if (Sound.master)\
+    \ Sound.master.gain.value = v; };\n  function freq(m) { return 440 * Math.pow(2, (m - 69) / 12); }\n\n  // One piano-ish\
+    \ voice: a few partials with a falling filter, a hammer tick and a pitch-dependent decay.\n  function voice(midi, vel,\
+    \ when, dest) {\n    var c = Sound.ctx, f = freq(midi), t = when || c.currentTime;\n    var g = c.createGain(), filt =\
+    \ c.createBiquadFilter();\n    var v = 0.18 + 0.32 * (vel == null ? 0.75 : vel);\n    var decay = Math.max(0.35, Math.min(2.6,\
+    \ 1.5 * Math.pow(2, -(midi - 60) / 22)));\n    filt.type = 'lowpass'; filt.Q.value = 0.7;\n    filt.frequency.setValueAtTime(Math.min(12000,\
+    \ f * 9), t);\n    filt.frequency.setTargetAtTime(Math.min(6000, f * 2.6), t + 0.01, decay * 0.35);\n    g.gain.setValueAtTime(0.0001,\
+    \ t);\n    g.gain.linearRampToValueAtTime(v, t + 0.006);\n    g.gain.setTargetAtTime(v * 0.42, t + 0.008, 0.09);\n   \
+    \ g.gain.setTargetAtTime(0.0001, t + 0.12, decay);\n    filt.connect(g); g.connect(dest || Sound.piano);\n    var parts\
+    \ = [[1, 'triangle', 1], [1.0015, 'sawtooth', 0.12], [2, 'sine', 0.32], [3, 'sine', 0.1], [4.02, 'sine', 0.04]];\n   \
+    \ var oscs = parts.map(function (p) {\n      var o = c.createOscillator(), og = c.createGain();\n      o.type = p[1];\
+    \ o.frequency.value = f * p[0]; og.gain.value = p[2];\n      o.connect(og); og.connect(filt); o.start(t); return o;\n\
+    \    });\n    // hammer\n    var n = Math.floor(c.sampleRate * 0.03), buf = c.createBuffer(1, n, c.sampleRate), d = buf.getChannelData(0);\n\
+    \    for (var i = 0; i < n; i++) d[i] = (Math.random() * 2 - 1) * (1 - i / n);\n    var src = c.createBufferSource(),\
+    \ bp = c.createBiquadFilter(), hg = c.createGain();\n    src.buffer = buf; bp.type = 'bandpass'; bp.frequency.value =\
+    \ Math.min(8000, f * 5); hg.gain.value = v * 0.35;\n    src.connect(bp); bp.connect(hg); hg.connect(dest || Sound.piano);\
+    \ src.start(t);\n    var stopAt = t + decay * 5 + 0.3;\n    oscs.forEach(function (o) { o.stop(stopAt); });\n    return\
+    \ { g: g, oscs: oscs, release: function (at) {\n      var tt = Math.max(at || c.currentTime, t + 0.02);\n      g.gain.cancelScheduledValues(tt);\
+    \ g.gain.setTargetAtTime(0.0001, tt, 0.07);\n      oscs.forEach(function (o) { try { o.stop(tt + 0.6); } catch (e) {}\
+    \ });\n    } };\n  }\n  Sound.noteOn = function (midi, vel) {\n    if (!Sound.init()) return;\n    if (Sound.voices[midi])\
+    \ Sound.voices[midi].release();\n    Sound.voices[midi] = voice(midi, vel);\n    Sound.order.push(midi);\n    if (Sound.order.length\
+    \ > 28) { var old = Sound.order.shift(); if (Sound.voices[old] && old !== midi) { Sound.voices[old].release(); delete\
+    \ Sound.voices[old]; } }\n  };\n  Sound.noteOff = function (midi) {\n    var v = Sound.voices[midi];\n    if (v) { v.release();\
+    \ delete Sound.voices[midi]; }\n  };\n  // Play notes for listening: items are MIDI numbers or arrays (chords). Returns\
+    \ the duration in seconds.\n  Sound.play = function (items, opts) {\n    if (!Sound.init()) return 0;\n    opts = opts\
+    \ || {};\n    var gap = opts.gap || 0.55, dur = opts.dur || gap * 0.95, t = Sound.ctx.currentTime + 0.05;\n    items.forEach(function\
+    \ (it, i) {\n      var group = Array.isArray(it) ? it : [it];\n      group.forEach(function (m, j) {\n        var at =\
+    \ t + i * gap + (opts.roll ? j * 0.03 : 0);\n        var vv = voice(m, opts.vel || 0.7, at);\n        vv.release(at +\
+    \ dur);\n      });\n    });\n    return items.length * gap;\n  };\n\n  function tone(f, start, dur, type, vol, slideTo,\
+    \ dest) {\n    var c = Sound.ctx, o = c.createOscillator(), g = c.createGain();\n    o.type = type || 'sine';\n    o.frequency.setValueAtTime(f,\
     \ start);\n    if (slideTo) o.frequency.exponentialRampToValueAtTime(slideTo, start + dur);\n    g.gain.setValueAtTime(0.0001,\
     \ start);\n    g.gain.exponentialRampToValueAtTime(vol || 0.2, start + 0.008);\n    g.gain.exponentialRampToValueAtTime(0.0001,\
     \ start + dur);\n    o.connect(g); g.connect(dest || Sound.fx);\n    o.start(start); o.stop(start + dur + 0.05);\n  }\n\
@@ -455,58 +464,60 @@ native_deps:
     \ (s == null) return;\n    e.preventDefault();\n    if (e.repeat) return;\n    Input.noteOn(Input.base + s, 0.75, 'keys');\n\
     \  });\n  window.addEventListener('keyup', function (e) {\n    var s = Input.KEYMAP[e.code];\n    if (s == null) return;\n\
     \    var m = Input.base + s;\n    if (Input.held[m] === 'keys') Input.noteOff(m, 'keys');\n  });\n  window.addEventListener('blur',\
-    \ function () { Input.releaseAll(); });\n\n  function onMidiMessage(ev) {\n    var d = ev.data, cmd = d[0] & 0xf0, note\
-    \ = d[1], vel = d[2];\n    if (cmd === 0x90 && vel > 0) Input.noteOn(note, vel / 127, 'midi');\n    else if (cmd === 0x80\
-    \ || (cmd === 0x90 && vel === 0)) { if (Input.held[note] === 'midi') Input.noteOff(note, 'midi'); }\n  }\n  function attachMidi(access)\
-    \ {\n    var names = [];\n    access.inputs.forEach(function (inp) { inp.onmidimessage = onMidiMessage; if (inp.state\
-    \ !== 'disconnected') names.push(inp.name || 'MIDI keyboard'); });\n    Input.midi.inputs = names;\n    Input.midi.status\
-    \ = names.length ? 'on' : 'ready';\n    emitIn('midi', 0, 0, 'midi');\n  }\n  // Ask the browser for MIDI access. silent:\
-    \ only if permission was already given (no prompt).\n  Input.enableMidi = function (silent) {\n    if (!navigator.requestMIDIAccess)\
-    \ { Input.midi.status = 'unsupported'; return Promise.resolve(Input.midi); }\n    var go = function () {\n      Input.midi.status\
-    \ = 'pending';\n      return navigator.requestMIDIAccess({ sysex: false }).then(function (access) {\n        Input.midi.access\
-    \ = access;\n        attachMidi(access);\n        access.onstatechange = function () { attachMidi(access); };\n      \
-    \  DR.store.set('dr.midi', true);\n        return Input.midi;\n      }, function () { Input.midi.status = 'denied'; emitIn('midi',\
-    \ 0, 0, 'midi'); return Input.midi; });\n    };\n    if (!silent) return go();\n    if (!navigator.permissions || !navigator.permissions.query)\
-    \ return Promise.resolve(Input.midi);\n    return navigator.permissions.query({ name: 'midi' }).then(function (st) {\n\
-    \      return st.state === 'granted' ? go() : Input.midi;\n    }, function () { return Input.midi; });\n  };\n  if (DR.store.get('dr.midi',\
-    \ false)) setTimeout(function () { Input.enableMidi(true); }, 300);\n})();\n</script>\n\n<!-- ===== lib/music.js =====\
-    \ -->\n<script>\n/* Doremi Road — music theory for the browser (DR.Music).\n   The same rules as server_code/Music.py:\
-    \ note names, chord symbols, Roman numerals, rush sequences.\n   Keep the two in step; tools/testing/music_parity.py compares\
-    \ them. Also: chord detection and staff positions. */\n(function (root) {\n  'use strict';\n  var DR = root.DR = root.DR\
-    \ || {};\n  var LETTERS = 'CDEFGAB';\n  var LETTER_PC = [0, 2, 4, 5, 7, 9, 11];\n  var MAJOR = [0, 2, 4, 5, 7, 9, 11];\n\
-    \  var MINOR = [0, 2, 3, 5, 7, 8, 10];\n  var ACC = { '': 0, '#': 1, '##': 2, 'x': 2, 'b': -1, 'bb': -2, '♯': 1, '♭':\
-    \ -1 };\n  var CHORD_TYPES = {\n    '': [[0, 0], [4, 2], [7, 4]],\n    'm': [[0, 0], [3, 2], [7, 4]],\n    'dim': [[0,\
-    \ 0], [3, 2], [6, 4]],\n    'aug': [[0, 0], [4, 2], [8, 4]],\n    'sus2': [[0, 0], [2, 1], [7, 4]],\n    'sus4': [[0,\
-    \ 0], [5, 3], [7, 4]],\n    '5': [[0, 0], [7, 4]],\n    '6': [[0, 0], [4, 2], [7, 4], [9, 5]],\n    'm6': [[0, 0], [3,\
-    \ 2], [7, 4], [9, 5]],\n    '7': [[0, 0], [4, 2], [7, 4], [10, 6]],\n    'maj7': [[0, 0], [4, 2], [7, 4], [11, 6]],\n\
-    \    'm7': [[0, 0], [3, 2], [7, 4], [10, 6]],\n    'm7b5': [[0, 0], [3, 2], [6, 4], [10, 6]],\n    'dim7': [[0, 0], [3,\
-    \ 2], [6, 4], [9, 6]],\n    'add9': [[0, 0], [4, 2], [7, 4], [14, 1]],\n    '9': [[0, 0], [4, 2], [7, 4], [10, 6], [14,\
-    \ 1]]\n  };\n  var CHORD_ALIASES = { 'maj': '', 'M': '', 'min': 'm', '-': 'm', '°': 'dim', 'o': 'dim', '+': 'aug', 'ø':\
-    \ 'm7b5', 'ø7': 'm7b5',\n    '°7': 'dim7', 'o7': 'dim7', 'M7': 'maj7', 'Δ': 'maj7', 'Δ7': 'maj7', 'min7': 'm7', '-7':\
-    \ 'm7', 'dom7': '7', 'sus': 'sus4' };\n  var CHORD_NAMES = { '': 'major', 'm': 'minor', 'dim': 'diminished', 'aug': 'augmented',\
-    \ 'sus2': 'sus2', 'sus4': 'sus4', '5': 'power chord',\n    '6': 'major sixth', 'm6': 'minor sixth', '7': 'dominant seventh',\
-    \ 'maj7': 'major seventh', 'm7': 'minor seventh',\n    'm7b5': 'half-diminished', 'dim7': 'diminished seventh', 'add9':\
-    \ 'add nine', '9': 'dominant ninth' };\n  var EAR_CHORDS = { 'major': '', 'minor': 'm', 'diminished': 'dim', 'augmented':\
-    \ 'aug', 'dominant 7th': '7', 'major 7th': 'maj7', 'minor 7th': 'm7' };\n  var INTERVALS = { m2: [1, 'minor 2nd'], M2:\
-    \ [2, 'major 2nd'], m3: [3, 'minor 3rd'], M3: [4, 'major 3rd'], P4: [5, 'perfect 4th'],\n    TT: [6, 'tritone'], P5: [7,\
-    \ 'perfect 5th'], m6: [8, 'minor 6th'], M6: [9, 'major 6th'], m7: [10, 'minor 7th'], M7: [11, 'major 7th'], P8: [12, 'octave']\
-    \ };\n  var NOTE_RE = /^([A-Ga-g])(##|#|x|bb|b|♯|♭)?(-?\\d)$/;\n  var CHORD_RE = /^([A-G])(#|b|♯|♭)?([^/]*)(?:\\/([A-G])(#|b|♯|♭)?)?$/;\n\
-    \  var KEY_RE = /^([A-G])(#|b|♯|♭)?(m|min|minor)?$/;\n  var NUMERAL_RE = /^(b|#|♭|♯)?(VII|VI|V|IV|III|II|I|vii|vi|v|iv|iii|ii|i)(°|o|\\\
-    +|ø)?(maj7|M7|7)?$/;\n  var ROMAN = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII'];\n\n  function mod(a, n) { return ((a %\
-    \ n) + n) % n; }\n  function accText(a) { return { 0: '', 1: '♯', 2: '\U0001D12A', '-1': '♭', '-2': '\U0001D12B' }[a]\
-    \ || ''; }\n  function spell(letter, pc) {\n    var a = mod(pc - LETTER_PC[letter], 12);\n    if (a > 6) a -= 12;\n  \
-    \  return LETTERS[letter] + accText(a);\n  }\n  function parseNote(s) {\n    var m = NOTE_RE.exec(String(s == null ? ''\
-    \ : s).trim());\n    if (!m) return null;\n    var letter = LETTERS.indexOf(m[1].toUpperCase());\n    var midi = (parseInt(m[3],\
-    \ 10) + 1) * 12 + LETTER_PC[letter] + ACC[m[2] || ''];\n    return midi >= 21 && midi <= 108 ? midi : null;\n  }\n  function\
-    \ noteLetter(s) {\n    var m = NOTE_RE.exec(String(s == null ? '' : s).trim());\n    return m ? LETTERS.indexOf(m[1].toUpperCase())\
-    \ : null;\n  }\n  var SHARPS = ['C', 'C♯', 'D', 'D♯', 'E', 'F', 'F♯', 'G', 'G♯', 'A', 'A♯', 'B'];\n  var FLATS = ['C',\
-    \ 'D♭', 'D', 'E♭', 'E', 'F', 'G♭', 'G', 'A♭', 'A', 'B♭', 'B'];\n  function nameOf(midi, flats) { return (flats ? FLATS\
-    \ : SHARPS)[mod(midi, 12)] + (Math.floor(midi / 12) - 1); }\n  function pcName(pc, flats) { return (flats ? FLATS : SHARPS)[mod(pc,\
-    \ 12)]; }\n  // 'F#4' → 'F♯4' (pretty, keeps the written spelling); without the octave if noOct.\n  function pretty(s,\
-    \ noOct) {\n    var m = NOTE_RE.exec(String(s || '').trim());\n    if (!m) return String(s || '');\n    var a = { '':\
-    \ '', '#': '♯', '##': '\U0001D12A', 'x': '\U0001D12A', 'b': '♭', 'bb': '\U0001D12B', '♯': '♯', '♭': '♭' }[m[2] || ''];\n\
-    \    return m[1].toUpperCase() + a + (noOct ? '' : m[3]);\n  }\n\n  function parseChord(sym, octave) {\n    var s = String(sym\
-    \ == null ? '' : sym).trim();\n    var m = CHORD_RE.exec(s);\n    if (!m) return null;\n    var letter = LETTERS.indexOf(m[1]);\n\
+    \ function () { Input.releaseAll(); });\n  // a tablet switching apps mid-chord: don't leave notes ringing\n  document.addEventListener('visibilitychange',\
+    \ function () { if (document.hidden) Input.releaseAll(); });\n\n  function onMidiMessage(ev) {\n    var d = ev.data, cmd\
+    \ = d[0] & 0xf0, note = d[1], vel = d[2];\n    if (cmd === 0x90 && vel > 0) Input.noteOn(note, vel / 127, 'midi');\n \
+    \   else if (cmd === 0x80 || (cmd === 0x90 && vel === 0)) { if (Input.held[note] === 'midi') Input.noteOff(note, 'midi');\
+    \ }\n  }\n  function attachMidi(access) {\n    var names = [];\n    access.inputs.forEach(function (inp) { inp.onmidimessage\
+    \ = onMidiMessage; if (inp.state !== 'disconnected') names.push(inp.name || 'MIDI keyboard'); });\n    Input.midi.inputs\
+    \ = names;\n    Input.midi.status = names.length ? 'on' : 'ready';\n    emitIn('midi', 0, 0, 'midi');\n  }\n  // Ask the\
+    \ browser for MIDI access. silent: only if permission was already given (no prompt).\n  Input.enableMidi = function (silent)\
+    \ {\n    if (!navigator.requestMIDIAccess) { Input.midi.status = 'unsupported'; return Promise.resolve(Input.midi); }\n\
+    \    var go = function () {\n      Input.midi.status = 'pending';\n      return navigator.requestMIDIAccess({ sysex: false\
+    \ }).then(function (access) {\n        Input.midi.access = access;\n        attachMidi(access);\n        access.onstatechange\
+    \ = function () { attachMidi(access); };\n        DR.store.set('dr.midi', true);\n        return Input.midi;\n      },\
+    \ function () { Input.midi.status = 'denied'; emitIn('midi', 0, 0, 'midi'); return Input.midi; });\n    };\n    if (!silent)\
+    \ return go();\n    if (!navigator.permissions || !navigator.permissions.query) return Promise.resolve(Input.midi);\n\
+    \    return navigator.permissions.query({ name: 'midi' }).then(function (st) {\n      return st.state === 'granted' ?\
+    \ go() : Input.midi;\n    }, function () { return Input.midi; });\n  };\n  if (DR.store.get('dr.midi', false)) setTimeout(function\
+    \ () { Input.enableMidi(true); }, 300);\n})();\n</script>\n\n<!-- ===== lib/music.js ===== -->\n<script>\n/* Doremi Road\
+    \ — music theory for the browser (DR.Music).\n   The same rules as server_code/Music.py: note names, chord symbols, Roman\
+    \ numerals, rush sequences.\n   Keep the two in step; tools/testing/music_parity.py compares them. Also: chord detection\
+    \ and staff positions. */\n(function (root) {\n  'use strict';\n  var DR = root.DR = root.DR || {};\n  var LETTERS = 'CDEFGAB';\n\
+    \  var LETTER_PC = [0, 2, 4, 5, 7, 9, 11];\n  var MAJOR = [0, 2, 4, 5, 7, 9, 11];\n  var MINOR = [0, 2, 3, 5, 7, 8, 10];\n\
+    \  var ACC = { '': 0, '#': 1, '##': 2, 'x': 2, 'b': -1, 'bb': -2, '♯': 1, '♭': -1 };\n  var CHORD_TYPES = {\n    '': [[0,\
+    \ 0], [4, 2], [7, 4]],\n    'm': [[0, 0], [3, 2], [7, 4]],\n    'dim': [[0, 0], [3, 2], [6, 4]],\n    'aug': [[0, 0],\
+    \ [4, 2], [8, 4]],\n    'sus2': [[0, 0], [2, 1], [7, 4]],\n    'sus4': [[0, 0], [5, 3], [7, 4]],\n    '5': [[0, 0], [7,\
+    \ 4]],\n    '6': [[0, 0], [4, 2], [7, 4], [9, 5]],\n    'm6': [[0, 0], [3, 2], [7, 4], [9, 5]],\n    '7': [[0, 0], [4,\
+    \ 2], [7, 4], [10, 6]],\n    'maj7': [[0, 0], [4, 2], [7, 4], [11, 6]],\n    'm7': [[0, 0], [3, 2], [7, 4], [10, 6]],\n\
+    \    'm7b5': [[0, 0], [3, 2], [6, 4], [10, 6]],\n    'dim7': [[0, 0], [3, 2], [6, 4], [9, 6]],\n    'add9': [[0, 0], [4,\
+    \ 2], [7, 4], [14, 1]],\n    '9': [[0, 0], [4, 2], [7, 4], [10, 6], [14, 1]]\n  };\n  var CHORD_ALIASES = { 'maj': '',\
+    \ 'M': '', 'min': 'm', '-': 'm', '°': 'dim', 'o': 'dim', '+': 'aug', 'ø': 'm7b5', 'ø7': 'm7b5',\n    '°7': 'dim7', 'o7':\
+    \ 'dim7', 'M7': 'maj7', 'Δ': 'maj7', 'Δ7': 'maj7', 'min7': 'm7', '-7': 'm7', 'dom7': '7', 'sus': 'sus4' };\n  var CHORD_NAMES\
+    \ = { '': 'major', 'm': 'minor', 'dim': 'diminished', 'aug': 'augmented', 'sus2': 'sus2', 'sus4': 'sus4', '5': 'power\
+    \ chord',\n    '6': 'major sixth', 'm6': 'minor sixth', '7': 'dominant seventh', 'maj7': 'major seventh', 'm7': 'minor\
+    \ seventh',\n    'm7b5': 'half-diminished', 'dim7': 'diminished seventh', 'add9': 'add nine', '9': 'dominant ninth' };\n\
+    \  var EAR_CHORDS = { 'major': '', 'minor': 'm', 'diminished': 'dim', 'augmented': 'aug', 'dominant 7th': '7', 'major\
+    \ 7th': 'maj7', 'minor 7th': 'm7' };\n  var INTERVALS = { m2: [1, 'minor 2nd'], M2: [2, 'major 2nd'], m3: [3, 'minor 3rd'],\
+    \ M3: [4, 'major 3rd'], P4: [5, 'perfect 4th'],\n    TT: [6, 'tritone'], P5: [7, 'perfect 5th'], m6: [8, 'minor 6th'],\
+    \ M6: [9, 'major 6th'], m7: [10, 'minor 7th'], M7: [11, 'major 7th'], P8: [12, 'octave'] };\n  var NOTE_RE = /^([A-Ga-g])(##|#|x|bb|b|♯|♭)?(-?\\\
+    d)$/;\n  var CHORD_RE = /^([A-G])(#|b|♯|♭)?([^/]*)(?:\\/([A-G])(#|b|♯|♭)?)?$/;\n  var KEY_RE = /^([A-G])(#|b|♯|♭)?(m|min|minor)?$/;\n\
+    \  var NUMERAL_RE = /^(b|#|♭|♯)?(VII|VI|V|IV|III|II|I|vii|vi|v|iv|iii|ii|i)(°|o|\\+|ø)?(maj7|M7|7)?$/;\n  var ROMAN =\
+    \ ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII'];\n\n  function mod(a, n) { return ((a % n) + n) % n; }\n  function accText(a)\
+    \ { return { 0: '', 1: '♯', 2: '\U0001D12A', '-1': '♭', '-2': '\U0001D12B' }[a] || ''; }\n  function spell(letter, pc)\
+    \ {\n    var a = mod(pc - LETTER_PC[letter], 12);\n    if (a > 6) a -= 12;\n    return LETTERS[letter] + accText(a);\n\
+    \  }\n  function parseNote(s) {\n    var m = NOTE_RE.exec(String(s == null ? '' : s).trim());\n    if (!m) return null;\n\
+    \    var letter = LETTERS.indexOf(m[1].toUpperCase());\n    var midi = (parseInt(m[3], 10) + 1) * 12 + LETTER_PC[letter]\
+    \ + ACC[m[2] || ''];\n    return midi >= 21 && midi <= 108 ? midi : null;\n  }\n  function noteLetter(s) {\n    var m\
+    \ = NOTE_RE.exec(String(s == null ? '' : s).trim());\n    return m ? LETTERS.indexOf(m[1].toUpperCase()) : null;\n  }\n\
+    \  var SHARPS = ['C', 'C♯', 'D', 'D♯', 'E', 'F', 'F♯', 'G', 'G♯', 'A', 'A♯', 'B'];\n  var FLATS = ['C', 'D♭', 'D', 'E♭',\
+    \ 'E', 'F', 'G♭', 'G', 'A♭', 'A', 'B♭', 'B'];\n  function nameOf(midi, flats) { return (flats ? FLATS : SHARPS)[mod(midi,\
+    \ 12)] + (Math.floor(midi / 12) - 1); }\n  function pcName(pc, flats) { return (flats ? FLATS : SHARPS)[mod(pc, 12)];\
+    \ }\n  // 'F#4' → 'F♯4' (pretty, keeps the written spelling); without the octave if noOct.\n  function pretty(s, noOct)\
+    \ {\n    var m = NOTE_RE.exec(String(s || '').trim());\n    if (!m) return String(s || '');\n    var a = { '': '', '#':\
+    \ '♯', '##': '\U0001D12A', 'x': '\U0001D12A', 'b': '♭', 'bb': '\U0001D12B', '♯': '♯', '♭': '♭' }[m[2] || ''];\n    return\
+    \ m[1].toUpperCase() + a + (noOct ? '' : m[3]);\n  }\n\n  function parseChord(sym, octave) {\n    var s = String(sym ==\
+    \ null ? '' : sym).trim();\n    var m = CHORD_RE.exec(s);\n    if (!m) return null;\n    var letter = LETTERS.indexOf(m[1]);\n\
     \    var pc = mod(LETTER_PC[letter] + ACC[m[2] || ''], 12);\n    var q = m[3] || '';\n    if (Object.prototype.hasOwnProperty.call(CHORD_ALIASES,\
     \ q)) q = CHORD_ALIASES[q];\n    if (!Object.prototype.hasOwnProperty.call(CHORD_TYPES, q)) return null;\n    if (octave\
     \ == null) octave = pc <= 5 ? 4 : 3;\n    var root = (octave + 1) * 12 + pc;\n    var type = CHORD_TYPES[q];\n    var\
@@ -788,42 +799,44 @@ native_deps:
     \ hits, score, combo, perfects, notes, chords, ear, quiz, time, midi}. */\n(function () {\n  'use strict';\n  var DR =\
     \ window.DR = window.DR || {};\n  var M = DR.Music, esc = function (s) { return DR.esc(s); };\n  var mod = M.mod;\n\n\
     \  var CSS = [\n    /* keyboard */\n    '.kb { position: relative; height: 100%; min-height: 96px; user-select: none;\
-    \ touch-action: none; border-radius: 0 0 10px 10px; }',\n    '.kb .k { position: absolute; top: 0; box-sizing: border-box;\
-    \ display: flex; flex-direction: column; justify-content: flex-end; align-items: center; cursor: pointer; transition:\
-    \ background .06s, transform .06s, box-shadow .1s; }',\n    '.kb .w { height: 100%; background: linear-gradient(180deg,\
-    \ #f3ecdc 0%, #fbf7ee 70%, #e9dfc8 100%); border: 1px solid #2a2a33; border-top: 0; border-radius: 0 0 7px 7px; z-index:\
-    \ 1; box-shadow: inset 0 -6px 0 rgba(0,0,0,.08); }',\n    '.kb .b { height: 62%; background: linear-gradient(180deg, #2b2b33,\
-    \ #121217 80%, #2a2a31); border: 1px solid #000; border-top: 0; border-radius: 0 0 5px 5px; z-index: 2; box-shadow: inset\
-    \ 0 -5px 0 rgba(255,255,255,.07), 0 3px 4px rgba(0,0,0,.45); }',\n    '.kb .w.down { background: linear-gradient(180deg,\
-    \ #e3d7bd, #efe6d2); transform: translateY(1px); box-shadow: inset 0 -2px 0 rgba(0,0,0,.08); }',\n    '.kb .b.down { background:\
-    \ linear-gradient(180deg, #3b3b46, #24242c); transform: translateY(1px); }',\n    '.kb .k .nm { font: 600 11px Inter,\
-    \ sans-serif; color: #6c6559; margin-bottom: 6px; pointer-events: none; white-space: nowrap; }',\n    '.kb .k .kl { font:\
-    \ 600 10px Inter, sans-serif; color: rgba(60,55,45,.42); margin-bottom: 3px; pointer-events: none; border: 1px solid rgba(60,55,45,.2);\
-    \ border-radius: 4px; padding: 0 4px; min-width: 14px; text-align: center; }',\n    '.kb .b .nm { color: #d9cfb9; font-size:\
-    \ 9.5px; } .kb .b .kl { color: rgba(240,231,211,.45); border-color: rgba(240,231,211,.2); }',\n    '.kb.noletters .kl\
-    \ { display: none; }',\n    '.kb .k.target { background: linear-gradient(180deg, #f4d58f, #e2b25a) !important; box-shadow:\
-    \ 0 0 18px rgba(226,178,90,.75), inset 0 -4px 0 rgba(0,0,0,.12); }',\n    '.kb .k.target .nm, .kb .k.lesson .nm, .kb .k.hint\
-    \ .nm { color: #2a1d06; font-weight: 700; }',\n    '.kb .b.target .nm, .kb .b.lesson .nm, .kb .b.hint .nm { color: #2a1d06;\
-    \ }',\n    '.kb .k.hint { background: linear-gradient(180deg, #f1e2bd, #e8cf94) !important; }',\n    '.kb .b.hint { background:\
-    \ linear-gradient(180deg, #b8964f, #8f7036) !important; }',\n    '.kb .k.lesson { background: linear-gradient(180deg,\
-    \ #c9d8f5, #9fb9ea) !important; }',\n    '.kb .b.lesson { background: linear-gradient(180deg, #6f8fd0, #4b6bb0) !important;\
-    \ }',\n    '.kb .k.lane { box-shadow: inset 0 0 0 2px rgba(226,178,90,.65); }',\n    '.kb .k.ok { background: linear-gradient(180deg,\
-    \ #a6e8c3, #5cc58d) !important; }',\n    '.kb .k.bad { background: linear-gradient(180deg, #f2a39b, #d9584f) !important;\
-    \ }',\n    /* skins */\n    '.kb.skin-rosewood { background: linear-gradient(180deg,#5a2e1f,#3b1d14); padding: 0 6px 6px;\
-    \ }',\n    '.kb.skin-rosewood .w { background: linear-gradient(180deg,#efe2c4,#f6edd8 70%,#dccba4); }',\n    '.kb.skin-ebony\
-    \ .w { background: linear-gradient(180deg,#26262e,#1a1a20 75%,#2c2c35); border-color: #000; } .kb.skin-ebony .w .nm {\
-    \ color: #c9bfa9; } .kb.skin-ebony .w .kl { color: rgba(240,231,211,.4); border-color: rgba(240,231,211,.2); }',\n   \
-    \ '.kb.skin-ebony .b { background: linear-gradient(180deg,#f4efe3,#d9d1bf); border-color: #888; } .kb.skin-ebony .b .nm\
-    \ { color: #3c352a; } .kb.skin-ebony .b .kl { color: rgba(40,35,30,.5); border-color: rgba(40,35,30,.25); }',\n    '.kb.skin-jade\
-    \ .w { background: linear-gradient(180deg,#d7eadf,#eef7f1 70%,#bcd8c8); border-color: #a9863e; } .kb.skin-jade .b { background:\
-    \ linear-gradient(180deg,#2f6b55,#174233); border-color: #a9863e; }',\n    '.kb.skin-neon { background: #07060f; } .kb.skin-neon\
-    \ .w { background: linear-gradient(180deg,#14112a,#1d1838); border-color: #ff3ea5; box-shadow: inset 0 -3px 0 #ff3ea5;\
-    \ } .kb.skin-neon .w .nm { color: #ff9bd2; } .kb.skin-neon .kl { color: rgba(255,155,210,.55); border-color: rgba(255,155,210,.3);\
-    \ }',\n    '.kb.skin-neon .b { background: linear-gradient(180deg,#0c0a1a,#05040c); border-color: #3ee3ff; box-shadow:\
-    \ inset 0 -3px 0 #3ee3ff, 0 0 8px rgba(62,227,255,.4); } .kb.skin-neon .b .nm { color: #9cf1ff; }',\n    '.kb.skin-glass\
-    \ .w { background: linear-gradient(180deg,rgba(220,235,255,.55),rgba(255,255,255,.22)); border-color: rgba(255,255,255,.35);\
-    \ backdrop-filter: blur(2px); } .kb.skin-glass .w .nm { color: #e8f1ff; } .kb.skin-glass .kl { color: rgba(232,241,255,.6);\
-    \ border-color: rgba(232,241,255,.3); }',\n    '.kb.skin-glass .b { background: linear-gradient(180deg,rgba(40,60,100,.85),rgba(20,30,60,.9));\
+    \ -webkit-user-select: none; -webkit-touch-callout: none; touch-action: none; border-radius: 0 0 10px 10px; }',\n    /*\
+    \ touch-screen piano: taller keys, bigger names */\n    '.dr-touch .st-kb { height: clamp(140px, 31vh, 270px); } .dr-touch\
+    \ .kb .k .nm { font-size: 13px; margin-bottom: 9px; } .dr-touch .kb .b .nm { font-size: 11px; }',\n    '.kb .k { position:\
+    \ absolute; top: 0; box-sizing: border-box; display: flex; flex-direction: column; justify-content: flex-end; align-items:\
+    \ center; cursor: pointer; transition: background .06s, transform .06s, box-shadow .1s; }',\n    '.kb .w { height: 100%;\
+    \ background: linear-gradient(180deg, #f3ecdc 0%, #fbf7ee 70%, #e9dfc8 100%); border: 1px solid #2a2a33; border-top: 0;\
+    \ border-radius: 0 0 7px 7px; z-index: 1; box-shadow: inset 0 -6px 0 rgba(0,0,0,.08); }',\n    '.kb .b { height: 62%;\
+    \ background: linear-gradient(180deg, #2b2b33, #121217 80%, #2a2a31); border: 1px solid #000; border-top: 0; border-radius:\
+    \ 0 0 5px 5px; z-index: 2; box-shadow: inset 0 -5px 0 rgba(255,255,255,.07), 0 3px 4px rgba(0,0,0,.45); }',\n    '.kb\
+    \ .w.down { background: linear-gradient(180deg, #e3d7bd, #efe6d2); transform: translateY(1px); box-shadow: inset 0 -2px\
+    \ 0 rgba(0,0,0,.08); }',\n    '.kb .b.down { background: linear-gradient(180deg, #3b3b46, #24242c); transform: translateY(1px);\
+    \ }',\n    '.kb .k .nm { font: 600 11px Inter, sans-serif; color: #6c6559; margin-bottom: 6px; pointer-events: none; white-space:\
+    \ nowrap; }',\n    '.kb .k .kl { font: 600 10px Inter, sans-serif; color: rgba(60,55,45,.42); margin-bottom: 3px; pointer-events:\
+    \ none; border: 1px solid rgba(60,55,45,.2); border-radius: 4px; padding: 0 4px; min-width: 14px; text-align: center;\
+    \ }',\n    '.kb .b .nm { color: #d9cfb9; font-size: 9.5px; } .kb .b .kl { color: rgba(240,231,211,.45); border-color:\
+    \ rgba(240,231,211,.2); }',\n    '.kb.noletters .kl { display: none; }',\n    '.kb .k.target { background: linear-gradient(180deg,\
+    \ #f4d58f, #e2b25a) !important; box-shadow: 0 0 18px rgba(226,178,90,.75), inset 0 -4px 0 rgba(0,0,0,.12); }',\n    '.kb\
+    \ .k.target .nm, .kb .k.lesson .nm, .kb .k.hint .nm { color: #2a1d06; font-weight: 700; }',\n    '.kb .b.target .nm, .kb\
+    \ .b.lesson .nm, .kb .b.hint .nm { color: #2a1d06; }',\n    '.kb .k.hint { background: linear-gradient(180deg, #f1e2bd,\
+    \ #e8cf94) !important; }',\n    '.kb .b.hint { background: linear-gradient(180deg, #b8964f, #8f7036) !important; }',\n\
+    \    '.kb .k.lesson { background: linear-gradient(180deg, #c9d8f5, #9fb9ea) !important; }',\n    '.kb .b.lesson { background:\
+    \ linear-gradient(180deg, #6f8fd0, #4b6bb0) !important; }',\n    '.kb .k.lane { box-shadow: inset 0 0 0 2px rgba(226,178,90,.65);\
+    \ }',\n    '.kb .k.ok { background: linear-gradient(180deg, #a6e8c3, #5cc58d) !important; }',\n    '.kb .k.bad { background:\
+    \ linear-gradient(180deg, #f2a39b, #d9584f) !important; }',\n    /* skins */\n    '.kb.skin-rosewood { background: linear-gradient(180deg,#5a2e1f,#3b1d14);\
+    \ padding: 0 6px 6px; }',\n    '.kb.skin-rosewood .w { background: linear-gradient(180deg,#efe2c4,#f6edd8 70%,#dccba4);\
+    \ }',\n    '.kb.skin-ebony .w { background: linear-gradient(180deg,#26262e,#1a1a20 75%,#2c2c35); border-color: #000; }\
+    \ .kb.skin-ebony .w .nm { color: #c9bfa9; } .kb.skin-ebony .w .kl { color: rgba(240,231,211,.4); border-color: rgba(240,231,211,.2);\
+    \ }',\n    '.kb.skin-ebony .b { background: linear-gradient(180deg,#f4efe3,#d9d1bf); border-color: #888; } .kb.skin-ebony\
+    \ .b .nm { color: #3c352a; } .kb.skin-ebony .b .kl { color: rgba(40,35,30,.5); border-color: rgba(40,35,30,.25); }',\n\
+    \    '.kb.skin-jade .w { background: linear-gradient(180deg,#d7eadf,#eef7f1 70%,#bcd8c8); border-color: #a9863e; } .kb.skin-jade\
+    \ .b { background: linear-gradient(180deg,#2f6b55,#174233); border-color: #a9863e; }',\n    '.kb.skin-neon { background:\
+    \ #07060f; } .kb.skin-neon .w { background: linear-gradient(180deg,#14112a,#1d1838); border-color: #ff3ea5; box-shadow:\
+    \ inset 0 -3px 0 #ff3ea5; } .kb.skin-neon .w .nm { color: #ff9bd2; } .kb.skin-neon .kl { color: rgba(255,155,210,.55);\
+    \ border-color: rgba(255,155,210,.3); }',\n    '.kb.skin-neon .b { background: linear-gradient(180deg,#0c0a1a,#05040c);\
+    \ border-color: #3ee3ff; box-shadow: inset 0 -3px 0 #3ee3ff, 0 0 8px rgba(62,227,255,.4); } .kb.skin-neon .b .nm { color:\
+    \ #9cf1ff; }',\n    '.kb.skin-glass .w { background: linear-gradient(180deg,rgba(220,235,255,.55),rgba(255,255,255,.22));\
+    \ border-color: rgba(255,255,255,.35); backdrop-filter: blur(2px); } .kb.skin-glass .w .nm { color: #e8f1ff; } .kb.skin-glass\
+    \ .kl { color: rgba(232,241,255,.6); border-color: rgba(232,241,255,.3); }',\n    '.kb.skin-glass .b { background: linear-gradient(180deg,rgba(40,60,100,.85),rgba(20,30,60,.9));\
     \ border-color: rgba(255,255,255,.3); }',\n    '.kb.skin-gilded { background: linear-gradient(180deg,#5a4214,#2c1f08);\
     \ padding: 0 6px 6px; } .kb.skin-gilded .w { background: linear-gradient(180deg,#fbf3dc,#fff9ea 70%,#ead7a4); border-color:\
     \ #b58b2c; }',\n    '.kb.skin-gilded .b { background: linear-gradient(180deg,#e7c368,#b88a2a 80%,#d8ad4b); border-color:\
@@ -898,12 +911,24 @@ native_deps:
     \ 10px; gap: 8px; flex-wrap: wrap; } .st-dots { order: 5; width: 100%; } .st-dots i { width: 16px; } .st-stats { gap:\
     \ 10px; } .st-stats b { font-size: 16px; }',\n    '  .st-prompt { font-size: 20px; } .st-main { padding: 8px 10px 4px;\
     \ } .st-kbwrap { padding: 0 6px 8px; } .nt-big { font-size: 46px; } .qz-q { font-size: 22px; } .ls p { font-size: 15px;\
-    \ } .ls h3 { font-size: 24px; } .st-title b { font-size: 16px; } }'\n  ].join('\\n');\n  (function () { var s = document.createElement('style');\
-    \ s.textContent = CSS; document.head.appendChild(s); })();\n\n  /* ---------- the on-screen keyboard ---------- */\n \
-    \ function Keyboard(host, o) {\n    o = o || {};\n    var el = document.createElement('div');\n    host.appendChild(el);\n\
-    \    var keys = {}, low = 60, high = 83, pointers = {};\n    function cls() { el.className = 'kb skin-' + (o.skin || 'ivory')\
-    \ + (DR.settings.letters ? '' : ' noletters'); }\n    function label(m) {\n      var k = keys[m];\n      if (!k) return;\n\
-    \      var named = k.classList.contains('target') || k.classList.contains('lesson') || k.classList.contains('hint') ||\
+    \ } .ls h3 { font-size: 24px; } .st-title b { font-size: 16px; } }',\n    /* short screens (a phone held sideways): a\
+    \ compact stage so the keys keep their room */\n    '@media (max-height: 520px) { .dr-touch .st-kb { height: clamp(96px,\
+    \ 30vh, 150px); }',\n    '  .st-top { padding: 5px 12px; } .st-pause { width: 32px; height: 32px; } .st-title small {\
+    \ display: none; } .st-title b { font-size: 16px; } .st-stats small { font-size: 9.5px; } .st-stats b { font-size: 15px;\
+    \ }',\n    '  .st-main { padding: 4px 12px 2px; } .st-head { margin-bottom: 2px; } .st-kind { display: none; } .st-prompt\
+    \ { font-size: 18px; margin-top: 0; }',\n    '  .st-body { gap: 6px; overflow-y: auto; justify-content: safe center; }\
+    \ .nt-big { font-size: 34px; min-height: 0; } .nt-big small { font-size: 12px; margin-top: 2px; } .nt-label { font-size:\
+    \ 18px; } .nt-tip { font-size: 12px; min-height: 0; }',\n    '  .nt-chip { padding: 3px 8px; min-width: 32px; } .nt-chip\
+    \ .rn { font-size: 16px; } .st-kbinfo { display: none; } .st-kbwrap { padding-bottom: 6px; }',\n    '  .ear-play { width:\
+    \ 64px; height: 64px; font-size: 24px; } .opts { gap: 6px; } .opt { padding: 7px 12px; font-size: 14px; } .qz-q { font-size:\
+    \ 20px; } .qz-ex { font-size: 13px; }',\n    '  .ls h3 { font-size: 20px; margin-bottom: 4px; } .ls p { font-size: 13.5px;\
+    \ line-height: 1.45; margin-bottom: 6px; } .st-banner { padding: 10px 20px; } }'\n  ].join('\\n');\n  (function () { var\
+    \ s = document.createElement('style'); s.textContent = CSS; document.head.appendChild(s); })();\n\n  /* ---------- the\
+    \ on-screen keyboard ---------- */\n  function Keyboard(host, o) {\n    o = o || {};\n    var el = document.createElement('div');\n\
+    \    host.appendChild(el);\n    var keys = {}, low = 60, high = 83, pointers = {};\n    // computer-key letters only make\
+    \ sense with a computer keyboard\n    function cls() { el.className = 'kb skin-' + (o.skin || 'ivory') + (DR.settings.letters\
+    \ && !DR.touchUI() ? '' : ' noletters'); }\n    function label(m) {\n      var k = keys[m];\n      if (!k) return;\n \
+    \     var named = k.classList.contains('target') || k.classList.contains('lesson') || k.classList.contains('hint') ||\
     \ k.dataset.named;\n      var pc = mod(m, 12), lab = '';\n      if (named) lab = k.dataset.named || M.pcName(pc, o.flats);\n\
     \      else if (DR.settings.labels === 'all' && !M.isBlack(m)) lab = M.pcName(pc);\n      else if (DR.settings.labels\
     \ !== 'none' && pc === 0) lab = 'C' + (Math.floor(m / 12) - 1);\n      k.querySelector('.nm').textContent = lab;\n   \
@@ -920,26 +945,34 @@ native_deps:
     \ = '<span class=\"nm\"></span><span class=\"kl\"></span>';\n        el.appendChild(d2); keys[b] = d2;\n      }\n    \
     \  Object.keys(DR.Input.held).forEach(function (h) { if (keys[h]) keys[h].classList.add('down'); });\n      relabel();\n\
     \    }\n    function relabel() { cls(); Object.keys(keys).forEach(function (m) { label(+m); }); }\n    function keyAt(x,\
-    \ y) { var t = document.elementFromPoint(x, y); return t && t.closest ? t.closest('.kb .k') : null; }\n    el.addEventListener('pointerdown',\
+    \ y) { var t = document.elementFromPoint(x, y); return t && t.closest ? t.closest('.kb .k') : null; }\n    /* Mouse and\
+    \ fingers. pointers: pointerId → the key under it (null once it slides off the keys).\n       Each finger is its own pointer,\
+    \ so chords are just several fingers down at once. */\n    function holders(m) { var n = 0; for (var id in pointers) if\
+    \ (pointers[id] === m) n++; return n; }\n    // Like a tablet piano app: tapping lower on a key plays louder.\n    function\
+    \ velAt(k, y) { var r = k.getBoundingClientRect(), f = r.height ? (y - r.top) / r.height : 0.55; return Math.max(0.45,\
+    \ Math.min(1, 0.45 + 0.55 * f)); }\n    function press(id, k, y) { var m = +k.dataset.m; pointers[id] = m; DR.Input.noteOn(m,\
+    \ velAt(k, y), 'mouse'); }\n    function lift(id) {\n      var m = pointers[id];\n      pointers[id] = null;\n      if\
+    \ (m != null && !holders(m) && DR.Input.held[m] === 'mouse') DR.Input.noteOff(m, 'mouse');\n    }\n    el.addEventListener('pointerdown',\
     \ function (e) {\n      var k = e.target.closest('.k');\n      if (!k) return;\n      e.preventDefault();\n      DR.Sound.init();\n\
-    \      pointers[e.pointerId] = +k.dataset.m;\n      DR.Input.noteOn(+k.dataset.m, 0.75, 'mouse');\n    });\n    el.addEventListener('pointermove',\
-    \ function (e) {\n      if (pointers[e.pointerId] == null) return;\n      var k = keyAt(e.clientX, e.clientY);\n     \
-    \ if (!k || +k.dataset.m === pointers[e.pointerId]) return;\n      DR.Input.noteOff(pointers[e.pointerId], 'mouse');\n\
-    \      pointers[e.pointerId] = +k.dataset.m;\n      DR.Input.noteOn(+k.dataset.m, 0.75, 'mouse');\n    });\n    function\
-    \ up(e) {\n      var m = pointers[e.pointerId];\n      if (m == null) return;\n      delete pointers[e.pointerId];\n \
-    \     if (DR.Input.held[m] === 'mouse') DR.Input.noteOff(m, 'mouse');\n    }\n    ['pointerup', 'pointercancel'].forEach(function\
-    \ (ev) { window.addEventListener(ev, up); });\n    var off = DR.Input.on(function (type, m) {\n      if (type === 'base'\
-    \ || type === 'midi') { relabel(); return; }\n      var k = keys[m];\n      if (!k) return;\n      if (type === 'on')\
-    \ k.classList.add('down'); else if (type === 'off') k.classList.remove('down');\n    });\n    build(low, high);\n    var\
-    \ api = {\n      el: el,\n      range: function () { return [low, high]; },\n      setRange: function (lo, hi) { if (lo\
-    \ !== low || hi !== high) build(lo, hi); },\n      setSkin: function (s) { o.skin = s; cls(); },\n      setFlats: function\
-    \ (f) { o.flats = !!f; relabel(); },\n      // mark(midis, cls, names): add a class to keys; names: optional {midi: label}\n\
-    \      mark: function (midis, c, names) {\n        (midis || []).forEach(function (m) { var k = keys[m]; if (k) { k.classList.add(c);\
-    \ if (names && names[m]) k.dataset.named = names[m]; label(m); } });\n      },\n      unmark: function (c) {\n       \
-    \ el.querySelectorAll('.k.' + c).forEach(function (k) { k.classList.remove(c); delete k.dataset.named; label(+k.dataset.m);\
-    \ });\n      },\n      flash: function (m, c, ms) {\n        var k = keys[m];\n        if (!k) return;\n        k.classList.add(c);\n\
-    \        setTimeout(function () { k.classList.remove(c); }, ms || 260);\n      },\n      // x position and width of a\
-    \ key, in px from the keyboard's left edge (clamped to the ends)\n      keyRect: function (m) {\n        var k = keys[Math.max(low,\
+    \      if (pointers[e.pointerId] != null) lift(e.pointerId);\n      press(e.pointerId, k, e.clientY);\n    });\n    //\
+    \ sliding a finger along the keys plays each one (a glissando); off the keys it stops\n    el.addEventListener('pointermove',\
+    \ function (e) {\n      if (!(e.pointerId in pointers)) return;\n      var k = keyAt(e.clientX, e.clientY), m = k ? +k.dataset.m\
+    \ : null;\n      if (m === pointers[e.pointerId]) return;\n      lift(e.pointerId);\n      if (k) press(e.pointerId, k,\
+    \ e.clientY);\n    });\n    function up(e) {\n      if (!(e.pointerId in pointers)) return;\n      lift(e.pointerId);\n\
+    \      delete pointers[e.pointerId];\n    }\n    ['pointerup', 'pointercancel'].forEach(function (ev) { window.addEventListener(ev,\
+    \ up); });\n    el.addEventListener('contextmenu', function (e) { e.preventDefault(); });   // long-press on Android\n\
+    \    var off = DR.Input.on(function (type, m) {\n      if (type === 'base' || type === 'midi') { relabel(); return; }\n\
+    \      var k = keys[m];\n      if (!k) return;\n      if (type === 'on') k.classList.add('down'); else if (type === 'off')\
+    \ k.classList.remove('down');\n    });\n    build(low, high);\n    var api = {\n      el: el,\n      range: function ()\
+    \ { return [low, high]; },\n      setRange: function (lo, hi) { if (lo !== low || hi !== high) build(lo, hi); },\n   \
+    \   setSkin: function (s) { o.skin = s; cls(); },\n      setFlats: function (f) { o.flats = !!f; relabel(); },\n     \
+    \ // mark(midis, cls, names): add a class to keys; names: optional {midi: label}\n      mark: function (midis, c, names)\
+    \ {\n        (midis || []).forEach(function (m) { var k = keys[m]; if (k) { k.classList.add(c); if (names && names[m])\
+    \ k.dataset.named = names[m]; label(m); } });\n      },\n      unmark: function (c) {\n        el.querySelectorAll('.k.'\
+    \ + c).forEach(function (k) { k.classList.remove(c); delete k.dataset.named; label(+k.dataset.m); });\n      },\n    \
+    \  flash: function (m, c, ms) {\n        var k = keys[m];\n        if (!k) return;\n        k.classList.add(c);\n    \
+    \    setTimeout(function () { k.classList.remove(c); }, ms || 260);\n      },\n      // x position and width of a key,\
+    \ in px from the keyboard's left edge (clamped to the ends)\n      keyRect: function (m) {\n        var k = keys[Math.max(low,\
     \ Math.min(high, m))] || keys[low];\n        var r = el.getBoundingClientRect(), kr = k.getBoundingClientRect();\n   \
     \     return { x: kr.left - r.left, w: kr.width, black: M.isBlack(m), left: r.left };\n      },\n      relabel: relabel,\n\
     \      destroy: function () { off(); ['pointerup', 'pointercancel'].forEach(function (ev) { window.removeEventListener(ev,\
@@ -976,9 +1009,10 @@ native_deps:
     \ function release() { if (captured) { captured = false; DR.Input.capture(false); } }\n    var offIn = DR.Input.on(function\
     \ (type, m, vel, src) {\n      if (type === 'midi' || type === 'base') { info(); return; }\n      if (S.paused || S.over\
     \ || !cur) return;\n      if (type === 'on') { if (src === 'midi') S.midi = true; if (cur.on) cur.on(m, src); }\n    \
-    \  else if (type === 'off' && cur.off) cur.off(m);\n    });\n    function info() {\n      var mi = DR.Input.midi;\n  \
-    \    $('.v-input').innerHTML = mi.status === 'on' ? '\U0001F3B9 <b>' + esc(mi.inputs[0]) + '</b>' : '⌨️ Computer keyboard\
-    \ or click the keys';\n      var b = DR.Input.base;\n      $('.v-keys').innerHTML = mi.status === 'on' ? '' : '<b>Z</b>–<b>M</b>\
+    \  else if (type === 'off' && cur.off) cur.off(m);\n    });\n    function info() {\n      var mi = DR.Input.midi, touch\
+    \ = DR.touchUI();\n      $('.v-input').innerHTML = mi.status === 'on' ? '\U0001F3B9 <b>' + esc(mi.inputs[0]) + '</b>'\
+    \ : touch ? '\U0001F446 <b>Tap the keys</b> · several fingers at once for chords' : '⌨️ Computer keyboard or click the\
+    \ keys';\n      var b = DR.Input.base;\n      $('.v-keys').innerHTML = mi.status === 'on' || touch ? '' : '<b>Z</b>–<b>M</b>\
     \ = ' + M.nameOf(b) + ' octave · <b>Q</b>–<b>U</b> = ' + M.nameOf(b + 12) + ' octave · <b>↑ ↓</b> shift octave';\n   \
     \ }\n    info();\n    function stats() {\n      $('.v-score').textContent = DR.fmt(S.score);\n      $('.v-acc').textContent\
     \ = S.judged ? Math.round(100 * S.hits / S.judged) + '%' : '–';\n      $('.v-streak').textContent = S.streak;\n    }\n\
@@ -1020,66 +1054,67 @@ native_deps:
     \ '<div class=\"nt-staff\" style=\"display:inline-block;margin-bottom:12px\">' + DR.Art.staff(st.show, { clef: st.staff,\
     \ names: true }) + '</div>' : '') +\n        '<div class=\"ls-btns\">' + (show.length ? '<button class=\"dr-btn\" data-a=\"\
     hear\">▶ Hear it</button>' : '') +\n        '<button class=\"dr-btn gold\" data-a=\"cont\">Continue ▸</button></div><div\
-    \ class=\"nt-tip\">Try the highlighted keys. Press Enter to continue.</div></div>';\n      function onClick(e) {\n   \
-    \     var a = e.target.closest('[data-a]');\n        if (!a) return;\n        if (a.dataset.a === 'hear') DR.Sound.play(show,\
-    \ { gap: 0.45 });\n        if (a.dataset.a === 'cont') { DR.Sound.sfx('click'); stepDone(); }\n      }\n      function\
-    \ onKey(e) { if (e.key === 'Enter' && !S.paused) { e.preventDefault(); stepDone(); } }\n      body.addEventListener('click',\
-    \ onClick);\n      window.addEventListener('keydown', onKey);\n      return {\n        on: function (m) { if (show.indexOf(m)\
-    \ >= 0) kb.flash(m, 'ok', 200); },\n        auto: function () { stepDone(); },\n        destroy: function () { body.removeEventListener('click',\
-    \ onClick); window.removeEventListener('keydown', onKey); }\n      };\n    }\n\n    /* ----- notes: play each note in\
-    \ turn ----- */\n    function runNotes(st) {\n      var list = st.notes || [], midis = list.map(M.parseNote), idx = 0,\
-    \ tries = 0, exact = !!st.exact;\n      var mode = st.show || 'keys', labels = st.labels || [], missed = {};\n      head('notes',\
-    \ st.prompt);\n      setRange(midis, list.some(function (n) { return /b-?\\d$/.test(n); }));\n      body.innerHTML = '<div\
-    \ class=\"nt-label\"></div><div class=\"nt-big\"></div><div class=\"nt-staff\" style=\"display:none\"></div><div class=\"\
-    nt-chips\"></div><div class=\"nt-tip\"></div>';\n      var $l = body.querySelector('.nt-label'), $b = body.querySelector('.nt-big'),\
-    \ $s = body.querySelector('.nt-staff'),\n        $c = body.querySelector('.nt-chips'), $t = body.querySelector('.nt-tip');\n\
-    \      function nm(i) { return M.pretty(list[i], !exact); }\n      function draw() {\n        var hide = mode === 'staff'\
-    \ || labels.length;\n        $l.textContent = labels[idx] || '';\n        $b.innerHTML = mode === 'staff' || labels[idx]\
-    \ ? '' : esc(nm(idx)) + (mode === 'keys' ? '<small>Play the glowing key</small>' : exact ? '<small>Exact octave</small>'\
-    \ : '');\n        $b.style.display = $b.innerHTML ? '' : 'none';\n        if (mode === 'staff') { $s.style.display = '';\
-    \ $s.innerHTML = DR.Art.staff(list, { clef: st.clef, current: idx, done: idx, names: 'done' }); }\n        $c.innerHTML\
-    \ = list.length > 1 ? list.map(function (n, i) {\n          return '<span class=\"nt-chip ' + (i < idx ? (missed[i] ?\
-    \ 'miss' : 'done') : i === idx ? 'cur' : '') + '\">' + (i < idx || !hide ? esc(nm(i)) : i === idx ? '?' : '·') + '</span>';\n\
-    \        }).join('') : '';\n        kb.unmark('target'); kb.unmark('hint');\n        var names = {}; names[midis[idx]]\
-    \ = M.pretty(list[idx], true);\n        if (mode === 'keys') kb.mark([midis[idx]], 'target', names);\n        else if\
-    \ (tries >= 2) kb.mark([midis[idx]], 'hint', names);\n        $t.textContent = tries >= 2 ? 'Here it is: ' + M.pretty(list[idx],\
-    \ true) + '. Play it to go on.' : exact ? 'The octave counts here.' : 'Any octave counts.';\n      }\n      draw();\n\
-    \      return {\n        on: function (m) {\n          if (idx >= list.length) return;\n          var ok = exact ? m ===\
-    \ midis[idx] : mod(m, 12) === mod(midis[idx], 12);\n          if (ok) {\n            kb.flash(m, 'ok');\n            award(tries\
-    \ === 0 ? 1 : 0, 'notes');\n            if (tries) missed[idx] = true;\n            idx++; tries = 0;\n            if\
-    \ (idx >= list.length) { draw(); later(stepDone, 250); } else draw();\n          } else {\n            kb.flash(m, 'bad');\n\
-    \            tries++;\n            mistake();\n            $b.classList.remove('shake'); void $b.offsetWidth; $b.classList.add('shake');\n\
-    \            if (tries === 2) draw();\n          }\n        },\n        auto: function step() { if (idx < list.length\
-    \ && !S.over) { this.on(midis[idx]); later(step.bind(this), 20); } }\n      };\n    }\n\n    /* ----- chords and progressions:\
-    \ play each chord (all its notes) ----- */\n    function runChords(st, prog) {\n      var items = prog ? (st.numerals\
-    \ || []).map(function (n) { return M.parseNumeral(n, st.key); }) : (st.chords || []).map(M.chordOf);\n      var exact\
-    \ = !prog && !!st.exact, hint = !!st.hint, labels = st.labels || [], idx = 0, tries = 0, pressed = [], fresh = 0, missed\
-    \ = {}, lock = false;\n      var flats = prog ? M.keyUsesFlats(st.key) : items.some(function (c) { return c && /♭/.test(c.symbol);\
-    \ });\n      head(prog ? 'progression' : 'chords', st.prompt);\n      var all = [];\n      items.forEach(function (c)\
-    \ { if (c) all = all.concat(c.notes); });\n      setRange(all, flats);\n      body.innerHTML = (prog ? '<div class=\"\
-    nt-label\">Key of ' + esc(M.keyName(st.key)) + '</div>' : '<div class=\"nt-label\"></div>') +\n        '<div class=\"\
-    nt-big\"></div><div class=\"nt-chips\"></div><div class=\"nt-tip\"></div>';\n      var $l = body.querySelector('.nt-label'),\
-    \ $b = body.querySelector('.nt-big'), $c = body.querySelector('.nt-chips'), $t = body.querySelector('.nt-tip');\n    \
-    \  function draw() {\n        var c = items[idx];\n        if (!prog) $l.textContent = labels[idx] || '';\n        if\
-    \ (c) {\n          var showName = !prog || st.names !== false || tries >= 2;\n          $b.innerHTML = prog ? esc(c.numeral)\
-    \ + '<small>' + (showName ? esc(c.symbol) + ' · ' + esc(c.name) : 'Work out the chord from the numeral') + '</small>'\n\
-    \            : esc(c.type === '?' ? c.name : c.symbol) + '<small>' + esc(c.type === '?' ? 'Play these notes together'\
-    \ : c.name) + (hint || tries >= 2 ? ' · ' + esc(c.spelled.join(' ')) : '') + '</small>';\n        }\n        $c.innerHTML\
-    \ = items.length > 1 ? items.map(function (x, i) {\n          var top = prog ? x.numeral : (x.type === '?' ? (i < idx\
-    \ || i === idx ? x.name : '?') : x.symbol);\n          var sub = prog ? (st.names !== false || i < idx ? x.symbol : '')\
-    \ : '';\n          return '<span class=\"nt-chip ' + (i < idx ? (missed[i] ? 'miss' : 'done') : i === idx ? 'cur' : '')\
-    \ + '\"><span class=\"rn\">' + esc(top) + '</span>' + (sub ? '<small>' + esc(sub) + '</small>' : '') + '</span>';\n  \
-    \      }).join('') : '';\n        kb.unmark('hint');\n        if (c && (hint || tries >= 2)) {\n          var names =\
-    \ {};\n          c.notes.forEach(function (m, j) { names[m] = c.spelled[j] || M.pcName(m); });\n          kb.mark(c.notes,\
-    \ 'hint', names);\n        }\n        $t.textContent = tries >= 2 ? 'The lit keys show it. Play them together.' : exact\
-    \ ? 'Play exactly these keys (this shape and octave).' : 'Any octave or inversion counts. Hold the notes together, or\
-    \ play them quickly one after another.';\n      }\n      function satisfied(c) {\n        var now = performance.now();\n\
-    \        pressed = pressed.filter(function (p) { return now - p[1] < 1500; });\n        var active = Object.keys(DR.Input.held).map(Number).concat(pressed.map(function\
-    \ (p) { return p[0]; }));\n        if (exact) return c.notes.every(function (m) { return active.indexOf(m) >= 0; });\n\
-    \        var have = M.pcs(active);\n        return M.pcs(c.notes).every(function (p) { return have.indexOf(p) >= 0; });\n\
-    \      }\n      draw();\n      var api = {\n        on: function (m) {\n          var c = items[idx];\n          if (!c\
-    \ || lock) return;\n          var inT = exact ? c.notes.indexOf(m) >= 0 : M.pcs(c.notes).indexOf(mod(m, 12)) >= 0;\n \
-    \         if (!inT) {\n            kb.flash(m, 'bad');\n            tries++; mistake(); pressed = [];\n            $b.classList.remove('shake');\
+    \ class=\"nt-tip\">Try the highlighted keys.' + (DR.touchUI() ? '' : ' Press Enter to continue.') + '</div></div>';\n\
+    \      function onClick(e) {\n        var a = e.target.closest('[data-a]');\n        if (!a) return;\n        if (a.dataset.a\
+    \ === 'hear') DR.Sound.play(show, { gap: 0.45 });\n        if (a.dataset.a === 'cont') { DR.Sound.sfx('click'); stepDone();\
+    \ }\n      }\n      function onKey(e) { if (e.key === 'Enter' && !S.paused) { e.preventDefault(); stepDone(); } }\n  \
+    \    body.addEventListener('click', onClick);\n      window.addEventListener('keydown', onKey);\n      return {\n    \
+    \    on: function (m) { if (show.indexOf(m) >= 0) kb.flash(m, 'ok', 200); },\n        auto: function () { stepDone();\
+    \ },\n        destroy: function () { body.removeEventListener('click', onClick); window.removeEventListener('keydown',\
+    \ onKey); }\n      };\n    }\n\n    /* ----- notes: play each note in turn ----- */\n    function runNotes(st) {\n   \
+    \   var list = st.notes || [], midis = list.map(M.parseNote), idx = 0, tries = 0, exact = !!st.exact;\n      var mode\
+    \ = st.show || 'keys', labels = st.labels || [], missed = {};\n      head('notes', st.prompt);\n      setRange(midis,\
+    \ list.some(function (n) { return /b-?\\d$/.test(n); }));\n      body.innerHTML = '<div class=\"nt-label\"></div><div\
+    \ class=\"nt-big\"></div><div class=\"nt-staff\" style=\"display:none\"></div><div class=\"nt-chips\"></div><div class=\"\
+    nt-tip\"></div>';\n      var $l = body.querySelector('.nt-label'), $b = body.querySelector('.nt-big'), $s = body.querySelector('.nt-staff'),\n\
+    \        $c = body.querySelector('.nt-chips'), $t = body.querySelector('.nt-tip');\n      function nm(i) { return M.pretty(list[i],\
+    \ !exact); }\n      function draw() {\n        var hide = mode === 'staff' || labels.length;\n        $l.textContent =\
+    \ labels[idx] || '';\n        $b.innerHTML = mode === 'staff' || labels[idx] ? '' : esc(nm(idx)) + (mode === 'keys' ?\
+    \ '<small>Play the glowing key</small>' : exact ? '<small>Exact octave</small>' : '');\n        $b.style.display = $b.innerHTML\
+    \ ? '' : 'none';\n        if (mode === 'staff') { $s.style.display = ''; $s.innerHTML = DR.Art.staff(list, { clef: st.clef,\
+    \ current: idx, done: idx, names: 'done' }); }\n        $c.innerHTML = list.length > 1 ? list.map(function (n, i) {\n\
+    \          return '<span class=\"nt-chip ' + (i < idx ? (missed[i] ? 'miss' : 'done') : i === idx ? 'cur' : '') + '\"\
+    >' + (i < idx || !hide ? esc(nm(i)) : i === idx ? '?' : '·') + '</span>';\n        }).join('') : '';\n        kb.unmark('target');\
+    \ kb.unmark('hint');\n        var names = {}; names[midis[idx]] = M.pretty(list[idx], true);\n        if (mode === 'keys')\
+    \ kb.mark([midis[idx]], 'target', names);\n        else if (tries >= 2) kb.mark([midis[idx]], 'hint', names);\n      \
+    \  $t.textContent = tries >= 2 ? 'Here it is: ' + M.pretty(list[idx], true) + '. Play it to go on.' : exact ? 'The octave\
+    \ counts here.' : 'Any octave counts.';\n      }\n      draw();\n      return {\n        on: function (m) {\n        \
+    \  if (idx >= list.length) return;\n          var ok = exact ? m === midis[idx] : mod(m, 12) === mod(midis[idx], 12);\n\
+    \          if (ok) {\n            kb.flash(m, 'ok');\n            award(tries === 0 ? 1 : 0, 'notes');\n            if\
+    \ (tries) missed[idx] = true;\n            idx++; tries = 0;\n            if (idx >= list.length) { draw(); later(stepDone,\
+    \ 250); } else draw();\n          } else {\n            kb.flash(m, 'bad');\n            tries++;\n            mistake();\n\
+    \            $b.classList.remove('shake'); void $b.offsetWidth; $b.classList.add('shake');\n            if (tries ===\
+    \ 2) draw();\n          }\n        },\n        auto: function step() { if (idx < list.length && !S.over) { this.on(midis[idx]);\
+    \ later(step.bind(this), 20); } }\n      };\n    }\n\n    /* ----- chords and progressions: play each chord (all its notes)\
+    \ ----- */\n    function runChords(st, prog) {\n      var items = prog ? (st.numerals || []).map(function (n) { return\
+    \ M.parseNumeral(n, st.key); }) : (st.chords || []).map(M.chordOf);\n      var exact = !prog && !!st.exact, hint = !!st.hint,\
+    \ labels = st.labels || [], idx = 0, tries = 0, pressed = [], fresh = 0, missed = {}, lock = false;\n      var flats =\
+    \ prog ? M.keyUsesFlats(st.key) : items.some(function (c) { return c && /♭/.test(c.symbol); });\n      head(prog ? 'progression'\
+    \ : 'chords', st.prompt);\n      var all = [];\n      items.forEach(function (c) { if (c) all = all.concat(c.notes); });\n\
+    \      setRange(all, flats);\n      body.innerHTML = (prog ? '<div class=\"nt-label\">Key of ' + esc(M.keyName(st.key))\
+    \ + '</div>' : '<div class=\"nt-label\"></div>') +\n        '<div class=\"nt-big\"></div><div class=\"nt-chips\"></div><div\
+    \ class=\"nt-tip\"></div>';\n      var $l = body.querySelector('.nt-label'), $b = body.querySelector('.nt-big'), $c =\
+    \ body.querySelector('.nt-chips'), $t = body.querySelector('.nt-tip');\n      function draw() {\n        var c = items[idx];\n\
+    \        if (!prog) $l.textContent = labels[idx] || '';\n        if (c) {\n          var showName = !prog || st.names\
+    \ !== false || tries >= 2;\n          $b.innerHTML = prog ? esc(c.numeral) + '<small>' + (showName ? esc(c.symbol) + '\
+    \ · ' + esc(c.name) : 'Work out the chord from the numeral') + '</small>'\n            : esc(c.type === '?' ? c.name :\
+    \ c.symbol) + '<small>' + esc(c.type === '?' ? 'Play these notes together' : c.name) + (hint || tries >= 2 ? ' · ' + esc(c.spelled.join('\
+    \ ')) : '') + '</small>';\n        }\n        $c.innerHTML = items.length > 1 ? items.map(function (x, i) {\n        \
+    \  var top = prog ? x.numeral : (x.type === '?' ? (i < idx || i === idx ? x.name : '?') : x.symbol);\n          var sub\
+    \ = prog ? (st.names !== false || i < idx ? x.symbol : '') : '';\n          return '<span class=\"nt-chip ' + (i < idx\
+    \ ? (missed[i] ? 'miss' : 'done') : i === idx ? 'cur' : '') + '\"><span class=\"rn\">' + esc(top) + '</span>' + (sub ?\
+    \ '<small>' + esc(sub) + '</small>' : '') + '</span>';\n        }).join('') : '';\n        kb.unmark('hint');\n      \
+    \  if (c && (hint || tries >= 2)) {\n          var names = {};\n          c.notes.forEach(function (m, j) { names[m] =\
+    \ c.spelled[j] || M.pcName(m); });\n          kb.mark(c.notes, 'hint', names);\n        }\n        $t.textContent = tries\
+    \ >= 2 ? 'The lit keys show it. Play them together.' : exact ? 'Play exactly these keys (this shape and octave).' : 'Any\
+    \ octave or inversion counts. Hold the notes together, or play them quickly one after another.';\n      }\n      function\
+    \ satisfied(c) {\n        var now = performance.now();\n        pressed = pressed.filter(function (p) { return now - p[1]\
+    \ < 1500; });\n        var active = Object.keys(DR.Input.held).map(Number).concat(pressed.map(function (p) { return p[0];\
+    \ }));\n        if (exact) return c.notes.every(function (m) { return active.indexOf(m) >= 0; });\n        var have =\
+    \ M.pcs(active);\n        return M.pcs(c.notes).every(function (p) { return have.indexOf(p) >= 0; });\n      }\n     \
+    \ draw();\n      var api = {\n        on: function (m) {\n          var c = items[idx];\n          if (!c || lock) return;\n\
+    \          var inT = exact ? c.notes.indexOf(m) >= 0 : M.pcs(c.notes).indexOf(mod(m, 12)) >= 0;\n          if (!inT) {\n\
+    \            kb.flash(m, 'bad');\n            tries++; mistake(); pressed = [];\n            $b.classList.remove('shake');\
     \ void $b.offsetWidth; $b.classList.add('shake');\n            if (tries === 2) draw();\n            return;\n       \
     \   }\n          pressed.push([m, performance.now()]); fresh++;\n          if (fresh && satisfied(c)) {\n            c.notes.forEach(function\
     \ (n) { kb.flash(n, 'ok', 380); });\n            award(tries === 0 ? 1 : 0, 'chords');\n            if (tries) missed[idx]\
@@ -1392,57 +1427,66 @@ native_deps:
     \ { background: #10162b; border: 1px solid var(--dr-line-2); border-radius: 8px; padding: 6px 8px; color: var(--dr-ink);\
     \ }\n  .pr-tools input[type=text] { width: 90px; }\n  .pr-kbwrap { padding: 0 18px 16px; } .pr-kb { height: clamp(130px,\
     \ 26vh, 220px); border-top: 3px solid #6b1f2a; border-radius: 0 0 10px 10px; }\n  .pr-info { display: flex; justify-content:\
-    \ space-between; font-size: 12px; color: var(--dr-soft); padding: 6px 2px; gap: 10px; flex-wrap: wrap; } .pr-info b {\
-    \ color: var(--dr-ink-2); }\n\n  /* ---------- play ---------- */\n  .g-play { position: absolute; inset: 0; }\n  .pz\
-    \ h2 { font-size: 32px; text-align: center; margin-bottom: 18px; } .pz .col { display: flex; flex-direction: column; gap:\
-    \ 10px; }\n\n  /* ---------- profile & settings ---------- */\n  .pf-set { display: grid; grid-template-columns: 1fr auto;\
-    \ gap: 10px 16px; align-items: center; font-size: 14px; margin: 10px 0; }\n  .pf-set .sub { display: block; color: var(--dr-soft);\
-    \ font-size: 12px; }\n  .tog { position: relative; width: 44px; height: 24px; border-radius: 20px; background: rgba(255,\
-    \ 255, 255, .12); border: 1px solid var(--dr-line-2); cursor: pointer; flex: none; }\n  .tog::after { content: \"\"; position:\
-    \ absolute; top: 2px; left: 2px; width: 18px; height: 18px; border-radius: 50%; background: var(--dr-ink-2); transition:\
-    \ left .15s, background .15s; }\n  .tog.on { background: rgba(226, 178, 90, .35); border-color: var(--dr-gold); } .tog.on::after\
+    \ space-between; align-items: center; font-size: 12px; color: var(--dr-soft); padding: 6px 2px; gap: 10px; flex-wrap:\
+    \ wrap; } .pr-info b { color: var(--dr-ink-2); }\n  .pr-oct { display: inline-flex; align-items: center; gap: 8px; } .pr-oct\
+    \ b { min-width: 62px; text-align: center; font-variant-numeric: tabular-nums; }\n  .pr-oct button { width: 32px; height:\
+    \ 26px; border-radius: 8px; border: 1px solid var(--dr-line-2); background: rgba(255, 255, 255, .04); color: var(--dr-ink);\
+    \ font-size: 11px; line-height: 1; }\n  .pr-oct button:not([disabled]):hover { border-color: var(--dr-gold); color: var(--dr-gold);\
+    \ } .pr-oct button[disabled] { opacity: .3; cursor: default; }\n  /* touch-screen piano: taller keys, finger-sized octave\
+    \ buttons */\n  .dr-touch .pr-kb { height: clamp(160px, 36vh, 320px); }\n  .dr-touch .pr-oct button { width: 48px; height:\
+    \ 40px; font-size: 15px; border-radius: 10px; } .dr-touch .pr-oct b { font-size: 14px; }\n  .dr-touch .pr-info { font-size:\
+    \ 13px; }\n\n  /* ---------- play ---------- */\n  .g-play { position: absolute; inset: 0; }\n  .pz h2 { font-size: 32px;\
+    \ text-align: center; margin-bottom: 18px; } .pz .col { display: flex; flex-direction: column; gap: 10px; }\n\n  /* ----------\
+    \ profile & settings ---------- */\n  .pf-set { display: grid; grid-template-columns: 1fr auto; gap: 10px 16px; align-items:\
+    \ center; font-size: 14px; margin: 10px 0; }\n  .pf-set .sub { display: block; color: var(--dr-soft); font-size: 12px;\
+    \ }\n  .tog { position: relative; width: 44px; height: 24px; border-radius: 20px; background: rgba(255, 255, 255, .12);\
+    \ border: 1px solid var(--dr-line-2); cursor: pointer; flex: none; }\n  .tog::after { content: \"\"; position: absolute;\
+    \ top: 2px; left: 2px; width: 18px; height: 18px; border-radius: 50%; background: var(--dr-ink-2); transition: left .15s,\
+    \ background .15s; }\n  .tog.on { background: rgba(226, 178, 90, .35); border-color: var(--dr-gold); } .tog.on::after\
     \ { left: 22px; background: var(--dr-gold); }\n  .seg { display: inline-flex; border: 1px solid var(--dr-line-2); border-radius:\
     \ 9px; overflow: hidden; } .seg button { background: none; border: 0; color: var(--dr-ink-2); padding: 5px 10px; font-size:\
     \ 12.5px; font-weight: 600; }\n  .seg button.on { background: var(--dr-gold-soft); color: var(--dr-gold); }\n  .how li\
     \ { margin: 6px 0; color: var(--dr-ink-2); } .how b { color: var(--dr-ink); }\n  .kbd { display: inline-block; border:\
     \ 1px solid var(--dr-line-2); border-bottom-width: 2px; border-radius: 5px; padding: 0 6px; font-size: 12px; font-weight:\
-    \ 600; color: var(--dr-ink); background: rgba(255, 255, 255, .04); }\n\n  @media (max-width: 920px) {\n    .m-wrap { flex-direction:\
-    \ column; height: auto; }\n    .m-mapbox { padding: 10px; display: block; overflow-x: auto; }\n    .m-mapbox .dr-map-svg\
-    \ { min-width: 680px; height: auto; max-height: none; }\n    .m-side { width: auto; border-left: 0; border-top: 1px solid\
-    \ var(--dr-line); overflow: visible; }\n  }\n  @media (max-width: 700px) {\n    .g-bar { flex-wrap: wrap; gap: 8px; padding:\
-    \ 8px 12px; }\n    .g-brand { font-size: 20px; } .g-tabs { order: 5; width: 100%; margin: 0; } .g-tab { padding: 7px 10px;\
-    \ font-size: 13px; }\n    .g-me { margin-left: auto; } .g-rank { min-width: 90px; }\n    .g-page { padding: 16px 14px\
-    \ 50px; } .g-page h2 { font-size: 28px; }\n    .lv-grid { grid-template-columns: 1fr; } .lv-top h2 { font-size: 28px;\
-    \ }\n    .dr-modal { padding: 20px 16px; } .rs h2 { font-size: 30px; } .rs-acc { font-size: 50px; }\n    .pr-kbwrap {\
-    \ padding: 0 6px 10px; }\n  }\n</style>\n<script>\n(function () {\n  'use strict';\n  var DR = window.DR;\n  var esc =\
-    \ function (s) { return DR.esc(s); };\n  var M = DR.Music;\n\n  DR.define('game', function (root, init, emit) {\n    var\
-    \ GUEST_KEY = 'dr.guest';\n    var st = { signedIn: !!init.signed_in, guest: true, me: null, progress: null, status: null,\
-    \ journey: [], catalog: null,\n      daily: null, today: DR.today(), tab: 'map', sel: null, cleanup: null };\n    var\
-    \ stage = null, titleAnim = null, pauseOpen = null, curPlay = null;\n    var C = {};  // catalog lookups\n\n    /* ----------\
-    \ server ---------- */\n    function call(fn, args) {\n      return emit('call', { fn: fn, args: args || [] }).then(function\
-    \ (r) { return r; }, function (e) {\n        console.error(e); return { ok: false, error: 'Connection problem. Please\
-    \ try again.' };\n      });\n    }\n    var busyEl = null;\n    function busy(on, text) {\n      if (on && !busyEl) {\
-    \ busyEl = document.createElement('div'); busyEl.className = 'dr dr-loading'; busyEl.innerHTML = '<span class=\"dr-spin\"\
-    ></span><span>' + esc(text || 'One moment…') + '</span>'; root.appendChild(busyEl); }\n      if (!on && busyEl) { busyEl.remove();\
-    \ busyEl = null; }\n    }\n    function setCatalog(c) {\n      st.catalog = c;\n      C.codex = {}; c.codex.forEach(function\
-    \ (x) { C.codex[x.key] = x; });\n      C.composers = {}; c.composers.forEach(function (x) { C.composers[x.key] = x; });\n\
-    \      C.badges = {}; c.badges.forEach(function (x) { C.badges[x.key] = x; });\n      C.shop = {}; Object.keys(c.shop).forEach(function\
-    \ (k) { C.shop[k] = {}; c.shop[k].forEach(function (x) { C.shop[k][x.key] = x; }); });\n    }\n    function apply(r) {\n\
-    \      if (!r || !r.ok) return r;\n      if (r.catalog) setCatalog(r.catalog);\n      if (r.journey) st.journey = r.journey;\n\
-    \      ['me', 'progress', 'status', 'daily', 'today'].forEach(function (k) { if (r[k] !== undefined) st[k] = r[k]; });\n\
-    \      if (st.guest) DR.store.set(GUEST_KEY, st.progress);\n      return r;\n    }\n    function load() {\n      var p\
-    \ = st.guest ? call('guest_state', [DR.store.get(GUEST_KEY, null), DR.today()]) : call('get_state', [DR.today()]);\n \
-    \     return p.then(function (r) {\n        if (!r || !r.ok) { DR.toast(esc((r && r.error) || 'Could not load the road.'),\
-    \ 'err'); return r; }\n        return apply(r);\n      });\n    }\n    function act(name, args, text) {\n      var a =\
-    \ st.guest ? [st.progress].concat(args || [], [DR.today()]) : (args || []).concat([DR.today()]);\n      if (text) busy(true,\
-    \ text);\n      return call(st.guest ? 'guest_' + name : name, a).then(function (r) {\n        busy(false);\n        if\
-    \ (!r || !r.ok) { DR.toast(esc((r && r.error) || 'Something went wrong.'), 'err'); return r; }\n        return apply(r);\n\
-    \      });\n    }\n\n    /* ---------- lookups ---------- */\n    function rec(key) { return (st.progress.levels || {})[key]\
-    \ || { stars: 0, best: 0, score: 0, clears: 0 }; }\n    function isUnlocked(key) { return st.status.unlocked.indexOf(key)\
-    \ >= 0; }\n    function allLevels() { var out = []; st.journey.forEach(function (t) { t.levels.forEach(function (l, i)\
-    \ { out.push({ t: t, l: l, i: i }); }); }); return out; }\n    function findLevel(key) { return allLevels().filter(function\
-    \ (x) { return x.l.key === key; })[0]; }\n    function terrState(t) {\n      if (st.status.mastered.indexOf(t.key) >=\
-    \ 0) return 'mastered';\n      if (st.status.conquered.indexOf(t.key) >= 0) return 'conquered';\n      return t.levels.some(function\
+    \ 600; color: var(--dr-ink); background: rgba(255, 255, 255, .04); }\n\n  /* tablets: keep all six tabs visible next to\
+    \ the rank and avatar */\n  @media (min-width: 701px) and (max-width: 1100px) {\n    .g-bar { gap: 10px; padding: 10px\
+    \ 14px; } .g-tab { padding: 8px 9px; font-size: 13.5px; } .g-rank { min-width: 96px; } .g-rank b small { display: none;\
+    \ }\n  }\n  @media (max-width: 920px) {\n    .m-wrap { flex-direction: column; height: auto; }\n    .m-mapbox { padding:\
+    \ 10px; display: block; overflow-x: auto; }\n    .m-mapbox .dr-map-svg { min-width: 680px; height: auto; max-height: none;\
+    \ }\n    .m-side { width: auto; border-left: 0; border-top: 1px solid var(--dr-line); overflow: visible; }\n  }\n  @media\
+    \ (max-width: 700px) {\n    .g-bar { flex-wrap: wrap; gap: 8px; padding: 8px 12px; }\n    .g-brand { font-size: 20px;\
+    \ } .g-tabs { order: 5; width: 100%; margin: 0; } .g-tab { padding: 7px 10px; font-size: 13px; }\n    .g-me { margin-left:\
+    \ auto; } .g-rank { min-width: 90px; }\n    .g-page { padding: 16px 14px 50px; } .g-page h2 { font-size: 28px; }\n   \
+    \ .lv-grid { grid-template-columns: 1fr; } .lv-top h2 { font-size: 28px; }\n    .dr-modal { padding: 20px 16px; } .rs\
+    \ h2 { font-size: 30px; } .rs-acc { font-size: 50px; }\n    .pr-kbwrap { padding: 0 6px 10px; }\n  }\n</style>\n<script>\n\
+    (function () {\n  'use strict';\n  var DR = window.DR;\n  var esc = function (s) { return DR.esc(s); };\n  var M = DR.Music;\n\
+    \n  DR.define('game', function (root, init, emit) {\n    var GUEST_KEY = 'dr.guest';\n    var st = { signedIn: !!init.signed_in,\
+    \ guest: true, me: null, progress: null, status: null, journey: [], catalog: null,\n      daily: null, today: DR.today(),\
+    \ tab: 'map', sel: null, cleanup: null };\n    var stage = null, titleAnim = null, pauseOpen = null, curPlay = null;\n\
+    \    var C = {};  // catalog lookups\n\n    /* ---------- server ---------- */\n    function call(fn, args) {\n      return\
+    \ emit('call', { fn: fn, args: args || [] }).then(function (r) { return r; }, function (e) {\n        console.error(e);\
+    \ return { ok: false, error: 'Connection problem. Please try again.' };\n      });\n    }\n    var busyEl = null;\n  \
+    \  function busy(on, text) {\n      if (on && !busyEl) { busyEl = document.createElement('div'); busyEl.className = 'dr\
+    \ dr-loading'; busyEl.innerHTML = '<span class=\"dr-spin\"></span><span>' + esc(text || 'One moment…') + '</span>'; root.appendChild(busyEl);\
+    \ }\n      if (!on && busyEl) { busyEl.remove(); busyEl = null; }\n    }\n    function setCatalog(c) {\n      st.catalog\
+    \ = c;\n      C.codex = {}; c.codex.forEach(function (x) { C.codex[x.key] = x; });\n      C.composers = {}; c.composers.forEach(function\
+    \ (x) { C.composers[x.key] = x; });\n      C.badges = {}; c.badges.forEach(function (x) { C.badges[x.key] = x; });\n \
+    \     C.shop = {}; Object.keys(c.shop).forEach(function (k) { C.shop[k] = {}; c.shop[k].forEach(function (x) { C.shop[k][x.key]\
+    \ = x; }); });\n    }\n    function apply(r) {\n      if (!r || !r.ok) return r;\n      if (r.catalog) setCatalog(r.catalog);\n\
+    \      if (r.journey) st.journey = r.journey;\n      ['me', 'progress', 'status', 'daily', 'today'].forEach(function (k)\
+    \ { if (r[k] !== undefined) st[k] = r[k]; });\n      if (st.guest) DR.store.set(GUEST_KEY, st.progress);\n      return\
+    \ r;\n    }\n    function load() {\n      var p = st.guest ? call('guest_state', [DR.store.get(GUEST_KEY, null), DR.today()])\
+    \ : call('get_state', [DR.today()]);\n      return p.then(function (r) {\n        if (!r || !r.ok) { DR.toast(esc((r &&\
+    \ r.error) || 'Could not load the road.'), 'err'); return r; }\n        return apply(r);\n      });\n    }\n    function\
+    \ act(name, args, text) {\n      var a = st.guest ? [st.progress].concat(args || [], [DR.today()]) : (args || []).concat([DR.today()]);\n\
+    \      if (text) busy(true, text);\n      return call(st.guest ? 'guest_' + name : name, a).then(function (r) {\n    \
+    \    busy(false);\n        if (!r || !r.ok) { DR.toast(esc((r && r.error) || 'Something went wrong.'), 'err'); return\
+    \ r; }\n        return apply(r);\n      });\n    }\n\n    /* ---------- lookups ---------- */\n    function rec(key) {\
+    \ return (st.progress.levels || {})[key] || { stars: 0, best: 0, score: 0, clears: 0 }; }\n    function isUnlocked(key)\
+    \ { return st.status.unlocked.indexOf(key) >= 0; }\n    function allLevels() { var out = []; st.journey.forEach(function\
+    \ (t) { t.levels.forEach(function (l, i) { out.push({ t: t, l: l, i: i }); }); }); return out; }\n    function findLevel(key)\
+    \ { return allLevels().filter(function (x) { return x.l.key === key; })[0]; }\n    function terrState(t) {\n      if (st.status.mastered.indexOf(t.key)\
+    \ >= 0) return 'mastered';\n      if (st.status.conquered.indexOf(t.key) >= 0) return 'conquered';\n      return t.levels.some(function\
     \ (l) { return isUnlocked(l.key); }) ? 'open' : 'locked';\n    }\n    function currentTerr() {\n      for (var i = 0;\
     \ i < st.journey.length; i++) {\n        var t = st.journey[i];\n        if (t.levels.some(function (l) { return isUnlocked(l.key)\
     \ && !rec(l.key).stars; })) return t;\n      }\n      var open = st.journey.filter(function (t) { return terrState(t)\
@@ -1465,8 +1509,9 @@ native_deps:
     \        '<div class=\"g-title-btns\">' + (st.signedIn ? '<button class=\"dr-btn gold big\" data-a=\"continue\">Continue\
     \ the journey</button><button class=\"dr-btn big\" data-a=\"signout\">Sign out</button>'\n          : '<button class=\"\
     dr-btn gold big\" data-a=\"guest\">Begin the journey</button><button class=\"dr-btn big\" data-a=\"login\">Sign in</button>')\
-    \ + '</div>' +\n        '<div class=\"g-inputs\"><span class=\"dr-pill v-midi\"></span><span class=\"dr-pill\">⌨️ or your\
-    \ computer keyboard</span><span class=\"dr-pill\">\U0001F5B1️ or click the keys</span></div>' +\n        '</div><div class=\"\
+    \ + '</div>' +\n        '<div class=\"g-inputs\"><span class=\"dr-pill v-midi\"></span>' + (DR.touchUI() ? '<span class=\"\
+    dr-pill v-tap\">\U0001F446 or tap the on-screen piano</span>'\n          : '<span class=\"dr-pill\">⌨️ or your computer\
+    \ keyboard</span><span class=\"dr-pill\">\U0001F5B1️ or click the keys</span>') + '</div>' +\n        '</div><div class=\"\
     g-foot\"><a data-a=\"how\">How to play</a>' + (st.signedIn ? '' : '<a data-a=\"signup\">Create an account</a>') + '<a\
     \ data-lk-open=\"overview\">Privacy &amp; Terms</a></div></div>';\n      titleAnim = DR.Art.titleScene(root.querySelector('canvas'));\n\
     \      midiPill(root.querySelector('.v-midi'));\n      var off = DR.Input.on(function (t) { if (t === 'midi') midiPill(root.querySelector('.v-midi'));\
@@ -1476,61 +1521,66 @@ native_deps:
     \ 'login' || w === 'signup') authModal(w);\n        else if (w === 'how') howTo();\n        else if (w === 'midi') DR.Input.enableMidi(false).then(function\
     \ () { midiPill(root.querySelector('.v-midi')); });\n        else if (w === 'signout') emit('logout').then(function ()\
     \ { st.signedIn = false; renderTitle(); });\n      });\n    }\n    function midiPill(el) {\n      if (!el) return;\n \
-    \     var mi = DR.Input.midi;\n      if (mi.status === 'on') el.innerHTML = '\U0001F3B9 <b>' + esc(mi.inputs[0]) + '</b>\
-    \ connected';\n      else if (mi.status === 'unsupported') el.innerHTML = '\U0001F3B9 MIDI needs Chrome or Edge';\n  \
-    \    else if (mi.status === 'denied') el.innerHTML = '\U0001F3B9 MIDI was blocked by the browser';\n      else if (mi.status\
-    \ === 'ready') el.innerHTML = '\U0001F3B9 No MIDI keyboard found · plug one in';\n      else el.innerHTML = '<a data-a=\"\
-    midi\" style=\"cursor:pointer;color:var(--dr-gold)\">\U0001F3B9 Connect a MIDI keyboard</a>';\n    }\n    function howTo()\
-    \ {\n      DR.modal('<h2 style=\"font-size:30px;margin-bottom:12px\">How to play</h2><ul class=\"how\" style=\"padding-left:18px;line-height:1.55\"\
-    >' +\n        '<li><b>Travel the road.</b> Each territory of the knowledge map teaches one part of music. Clear a level\
-    \ to claim one of its provinces; clear them all to conquer the territory and unlock the next.</li>' +\n        '<li><b>Play\
-    \ with anything.</b> A MIDI keyboard (Chrome or Edge), your computer keyboard (<span class=\"kbd\">Z</span>–<span class=\"\
-    kbd\">M</span> and <span class=\"kbd\">Q</span>–<span class=\"kbd\">U</span> are two octaves, black keys on the row above,\
-    \ <span class=\"kbd\">↑</span><span class=\"kbd\">↓</span> shift octave) or the mouse.</li>' +\n        '<li><b>Challenges.</b>\
-    \ Lessons teach; note and chord steps check you can find things; progressions use Roman numerals; rushes drop notes onto\
-    \ the keys in time; ear training asks what you hear; quizzes test the theory.</li>' +\n        '<li><b>Stars.</b> 60%\
-    \ accuracy clears a level, 80% earns two stars, 95% three. Three stars on some levels earn composer cards.</li>' +\n \
-    \       '<li><b>Collect.</b> Codex pages, 20 composer cards, territory crests, 32 badges, ranks from Novice to Legend,\
-    \ and keyboards, note trails and banners from the shop, paid in ducats.</li>' +\n        '<li><b>Practise daily.</b> A\
-    \ fresh Daily Practice every day; keep a streak for bigger rewards. The Practice Room names any chord you play.</li></ul>',\
-    \ { cls: 'wide' });\n    }\n    function authModal(mode) {\n      var m = DR.modal('<div class=\"v-auth\"></div>');\n\
-    \      var box = m.el.querySelector('.v-auth');\n      function draw(mode2, msg) {\n        var signup = mode2 === 'signup',\
-    \ reset = mode2 === 'reset';\n        box.innerHTML = '<h2 style=\"font-size:30px;margin-bottom:6px\">' + (signup ? 'Create\
-    \ an account' : reset ? 'Reset your password' : 'Welcome back') + '</h2>' +\n          '<p class=\"dr-muted\" style=\"\
-    margin:0 0 16px\">' + (signup ? 'Your progress is saved to your account and you appear on the leaderboards. Anything you\
-    \ did as a guest comes with you.' : reset ? 'We\\'ll email you a link.' : 'Sign in to pick up where you left off.') +\
-    \ '</p>' +\n          '<form>' + (signup ? '<div class=\"dr-field\"><label>Your name</label><input class=\"dr-input\"\
-    \ name=\"name\" maxlength=\"24\" autocomplete=\"nickname\"></div>' : '') +\n          '<div class=\"dr-field\"><label>Email</label><input\
-    \ class=\"dr-input\" name=\"email\" type=\"email\" required autocomplete=\"email\"></div>' +\n          (reset ? '' :\
-    \ '<div class=\"dr-field\"><label>Password</label><input class=\"dr-input\" name=\"password\" type=\"password\" required\
-    \ autocomplete=\"' + (signup ? 'new-password' : 'current-password') + '\"></div>') +\n          (signup && window.LegalKit\
-    \ ? LegalKit.consentField() : '') +\n          '<div class=\"dr-err\">' + esc(msg || '') + '</div><button class=\"dr-btn\
-    \ gold\" style=\"width:100%;margin-top:6px\">' + (signup ? 'Create account' : reset ? 'Send link' : 'Sign in') + '</button></form>'\
-    \ +\n          '<p style=\"text-align:center;font-size:13px;margin:14px 0 0\" class=\"dr-muted\">' +\n          (signup\
-    \ ? 'Have an account? <a href=\"#\" data-m=\"login\">Sign in</a>' : reset ? '<a href=\"#\" data-m=\"login\">Back to sign\
-    \ in</a>' : 'New here? <a href=\"#\" data-m=\"signup\">Create an account</a> · <a href=\"#\" data-m=\"reset\">Forgot password?</a>')\
-    \ + '</p>';\n        box.querySelectorAll('a').forEach(function (a) { a.style.color = 'var(--dr-gold)'; });\n        var\
-    \ f = box.querySelector('form');\n        f.addEventListener('submit', function (e) {\n          e.preventDefault();\n\
-    \          if (signup && window.LegalKit && !LegalKit.consentChecked(f)) return;\n          var v = {}; Array.prototype.forEach.call(f.elements,\
-    \ function (x) { if (x.name) v[x.name] = x.value; });\n          busy(true, signup ? 'Creating your account…' : 'Signing\
-    \ in…');\n          emit(mode2, v).then(function (r) {\n            busy(false);\n            if (!r || !r.ok) { box.querySelector('.dr-err').textContent\
-    \ = (r && r.error) || 'Something went wrong.'; return; }\n            if (r.mode) { draw(r.mode, r.message); return; }\n\
-    \            m.close(); onSignedIn(signup);\n          });\n        });\n        box.querySelectorAll('[data-m]').forEach(function\
-    \ (a) { a.addEventListener('click', function (e) { e.preventDefault(); draw(a.dataset.m); }); });\n        var first =\
-    \ box.querySelector('input'); if (first) setTimeout(function () { first.focus(); }, 50);\n      }\n      draw(mode);\n\
-    \    }\n    function onSignedIn(isNew) {\n      st.signedIn = true; st.guest = false;\n      busy(true, 'Opening your\
-    \ map…');\n      var g = DR.store.get(GUEST_KEY, null);\n      var p = g ? call('import_guest', [g, DR.today()]) : call('get_state',\
-    \ [DR.today()]);\n      p.then(function (r) {\n        busy(false);\n        if (!r || !r.ok) { DR.toast(esc((r && r.error)\
-    \ || 'Could not load your progress.'), 'err'); return; }\n        apply(r);\n        if (g) DR.store.del(GUEST_KEY);\n\
-    \        DR.toast('Signed in as <b>' + esc(st.me.name) + '</b>', 'gold');\n        renderHub(st.tab);\n      });\n   \
-    \ }\n    function startSignedIn() { st.guest = false; busy(true, 'Opening your map…'); load().then(function (r) { busy(false);\
-    \ if (r && r.ok) renderHub(); }); }\n    function startGuest() { st.guest = true; busy(true, 'Unrolling the map…'); load().then(function\
-    \ (r) { busy(false); if (r && r.ok) renderHub(); }); }\n\n    /* ---------- hub ---------- */\n    var TABS = [['map',\
-    \ 'Map'], ['codex', 'Codex'], ['collection', 'Collection'], ['practice', 'Practice Room'], ['badges', 'Badges'], ['shop',\
-    \ 'Shop']];\n    function renderHub(tab) {\n      clear();\n      st.screen = 'hub';\n      st.tab = tab || st.tab ||\
-    \ 'map';\n      var s = st.status, r = s.rank, p = st.progress;\n      var pct = r.next ? Math.round(100 * (r.xp - r.from)\
-    \ / (r.next - r.from)) : 100;\n      root.innerHTML = '<div class=\"g-screen g-hub\">' +\n        '<header class=\"g-bar\"\
-    ><div class=\"g-brand\" data-a=\"title\">Doremi <i>Road</i></div>' +\n        '<nav class=\"g-tabs\">' + TABS.map(function\
+    \     var mi = DR.Input.midi, tap = el.parentNode && el.parentNode.querySelector('.v-tap');\n      // iPad/iPhone browsers\
+    \ have no Web MIDI: on a touch screen just offer the on-screen piano\n      el.style.display = mi.status === 'unsupported'\
+    \ && tap ? 'none' : '';\n      if (tap) tap.textContent = mi.status === 'unsupported' ? '\U0001F446 Play on the on-screen\
+    \ piano: tap the keys' : '\U0001F446 or tap the on-screen piano';\n      if (mi.status === 'on') el.innerHTML = '\U0001F3B9\
+    \ <b>' + esc(mi.inputs[0]) + '</b> connected';\n      else if (mi.status === 'unsupported') el.innerHTML = '\U0001F3B9\
+    \ MIDI needs Chrome or Edge';\n      else if (mi.status === 'denied') el.innerHTML = '\U0001F3B9 MIDI was blocked by the\
+    \ browser';\n      else if (mi.status === 'ready') el.innerHTML = '\U0001F3B9 No MIDI keyboard found · plug one in';\n\
+    \      else el.innerHTML = '<a data-a=\"midi\" style=\"cursor:pointer;color:var(--dr-gold)\">\U0001F3B9 Connect a MIDI\
+    \ keyboard</a>';\n    }\n    function howTo() {\n      DR.modal('<h2 style=\"font-size:30px;margin-bottom:12px\">How to\
+    \ play</h2><ul class=\"how\" style=\"padding-left:18px;line-height:1.55\">' +\n        '<li><b>Travel the road.</b> Each\
+    \ territory of the knowledge map teaches one part of music. Clear a level to claim one of its provinces; clear them all\
+    \ to conquer the territory and unlock the next.</li>' +\n        '<li><b>Play with anything.</b> The on-screen piano (on\
+    \ a tablet or phone, tap the keys and use several fingers for chords; in the Practice Room, ◀ ▶ change the octave), a\
+    \ MIDI keyboard (Chrome or Edge), your computer keyboard (<span class=\"kbd\">Z</span>–<span class=\"kbd\">M</span> and\
+    \ <span class=\"kbd\">Q</span>–<span class=\"kbd\">U</span> are two octaves, black keys on the row above, <span class=\"\
+    kbd\">↑</span><span class=\"kbd\">↓</span> shift octave) or the mouse.</li>' +\n        '<li><b>Challenges.</b> Lessons\
+    \ teach; note and chord steps check you can find things; progressions use Roman numerals; rushes drop notes onto the keys\
+    \ in time; ear training asks what you hear; quizzes test the theory.</li>' +\n        '<li><b>Stars.</b> 60% accuracy\
+    \ clears a level, 80% earns two stars, 95% three. Three stars on some levels earn composer cards.</li>' +\n        '<li><b>Collect.</b>\
+    \ Codex pages, 20 composer cards, territory crests, 32 badges, ranks from Novice to Legend, and keyboards, note trails\
+    \ and banners from the shop, paid in ducats.</li>' +\n        '<li><b>Practise daily.</b> A fresh Daily Practice every\
+    \ day; keep a streak for bigger rewards. The Practice Room names any chord you play.</li></ul>', { cls: 'wide' });\n \
+    \   }\n    function authModal(mode) {\n      var m = DR.modal('<div class=\"v-auth\"></div>');\n      var box = m.el.querySelector('.v-auth');\n\
+    \      function draw(mode2, msg) {\n        var signup = mode2 === 'signup', reset = mode2 === 'reset';\n        box.innerHTML\
+    \ = '<h2 style=\"font-size:30px;margin-bottom:6px\">' + (signup ? 'Create an account' : reset ? 'Reset your password'\
+    \ : 'Welcome back') + '</h2>' +\n          '<p class=\"dr-muted\" style=\"margin:0 0 16px\">' + (signup ? 'Your progress\
+    \ is saved to your account and you appear on the leaderboards. Anything you did as a guest comes with you.' : reset ?\
+    \ 'We\\'ll email you a link.' : 'Sign in to pick up where you left off.') + '</p>' +\n          '<form>' + (signup ? '<div\
+    \ class=\"dr-field\"><label>Your name</label><input class=\"dr-input\" name=\"name\" maxlength=\"24\" autocomplete=\"\
+    nickname\"></div>' : '') +\n          '<div class=\"dr-field\"><label>Email</label><input class=\"dr-input\" name=\"email\"\
+    \ type=\"email\" required autocomplete=\"email\"></div>' +\n          (reset ? '' : '<div class=\"dr-field\"><label>Password</label><input\
+    \ class=\"dr-input\" name=\"password\" type=\"password\" required autocomplete=\"' + (signup ? 'new-password' : 'current-password')\
+    \ + '\"></div>') +\n          (signup && window.LegalKit ? LegalKit.consentField() : '') +\n          '<div class=\"dr-err\"\
+    >' + esc(msg || '') + '</div><button class=\"dr-btn gold\" style=\"width:100%;margin-top:6px\">' + (signup ? 'Create account'\
+    \ : reset ? 'Send link' : 'Sign in') + '</button></form>' +\n          '<p style=\"text-align:center;font-size:13px;margin:14px\
+    \ 0 0\" class=\"dr-muted\">' +\n          (signup ? 'Have an account? <a href=\"#\" data-m=\"login\">Sign in</a>' : reset\
+    \ ? '<a href=\"#\" data-m=\"login\">Back to sign in</a>' : 'New here? <a href=\"#\" data-m=\"signup\">Create an account</a>\
+    \ · <a href=\"#\" data-m=\"reset\">Forgot password?</a>') + '</p>';\n        box.querySelectorAll('a').forEach(function\
+    \ (a) { a.style.color = 'var(--dr-gold)'; });\n        var f = box.querySelector('form');\n        f.addEventListener('submit',\
+    \ function (e) {\n          e.preventDefault();\n          if (signup && window.LegalKit && !LegalKit.consentChecked(f))\
+    \ return;\n          var v = {}; Array.prototype.forEach.call(f.elements, function (x) { if (x.name) v[x.name] = x.value;\
+    \ });\n          busy(true, signup ? 'Creating your account…' : 'Signing in…');\n          emit(mode2, v).then(function\
+    \ (r) {\n            busy(false);\n            if (!r || !r.ok) { box.querySelector('.dr-err').textContent = (r && r.error)\
+    \ || 'Something went wrong.'; return; }\n            if (r.mode) { draw(r.mode, r.message); return; }\n            m.close();\
+    \ onSignedIn(signup);\n          });\n        });\n        box.querySelectorAll('[data-m]').forEach(function (a) { a.addEventListener('click',\
+    \ function (e) { e.preventDefault(); draw(a.dataset.m); }); });\n        var first = box.querySelector('input'); if (first)\
+    \ setTimeout(function () { first.focus(); }, 50);\n      }\n      draw(mode);\n    }\n    function onSignedIn(isNew) {\n\
+    \      st.signedIn = true; st.guest = false;\n      busy(true, 'Opening your map…');\n      var g = DR.store.get(GUEST_KEY,\
+    \ null);\n      var p = g ? call('import_guest', [g, DR.today()]) : call('get_state', [DR.today()]);\n      p.then(function\
+    \ (r) {\n        busy(false);\n        if (!r || !r.ok) { DR.toast(esc((r && r.error) || 'Could not load your progress.'),\
+    \ 'err'); return; }\n        apply(r);\n        if (g) DR.store.del(GUEST_KEY);\n        DR.toast('Signed in as <b>' +\
+    \ esc(st.me.name) + '</b>', 'gold');\n        renderHub(st.tab);\n      });\n    }\n    function startSignedIn() { st.guest\
+    \ = false; busy(true, 'Opening your map…'); load().then(function (r) { busy(false); if (r && r.ok) renderHub(); }); }\n\
+    \    function startGuest() { st.guest = true; busy(true, 'Unrolling the map…'); load().then(function (r) { busy(false);\
+    \ if (r && r.ok) renderHub(); }); }\n\n    /* ---------- hub ---------- */\n    var TABS = [['map', 'Map'], ['codex',\
+    \ 'Codex'], ['collection', 'Collection'], ['practice', 'Practice Room'], ['badges', 'Badges'], ['shop', 'Shop']];\n  \
+    \  function renderHub(tab) {\n      clear();\n      st.screen = 'hub';\n      st.tab = tab || st.tab || 'map';\n     \
+    \ var s = st.status, r = s.rank, p = st.progress;\n      var pct = r.next ? Math.round(100 * (r.xp - r.from) / (r.next\
+    \ - r.from)) : 100;\n      root.innerHTML = '<div class=\"g-screen g-hub\">' +\n        '<header class=\"g-bar\"><div\
+    \ class=\"g-brand\" data-a=\"title\">Doremi <i>Road</i></div>' +\n        '<nav class=\"g-tabs\">' + TABS.map(function\
     \ (t) {\n          return '<button class=\"g-tab' + (st.tab === t[0] ? ' on' : '') + '\" data-tab=\"' + t[0] + '\">' +\
     \ t[1] + (t[0] === 'shop' && canBuyAny() ? '<span class=\"dot\"></span>' : '') + '</button>';\n        }).join('') + '</nav>'\
     \ +\n        '<div class=\"g-me\"><div class=\"g-rank\" data-a=\"profile\" title=\"' + DR.fmt(r.xp) + ' XP\"><b>' + esc(r.name)\
@@ -1785,51 +1835,66 @@ native_deps:
     \ class=\"dr-btn small\" data-a=\"hear\">▶ Hear it</button>' +\n        '<label>Metronome <input type=\"range\" min=\"\
     40\" max=\"200\" data-k=\"bpm\" value=\"' + ps.bpm + '\"> <b class=\"v-bpm\">' + ps.bpm + '</b></label><button class=\"\
     dr-btn small\" data-a=\"metro\">Start</button></div></div>' +\n        '<div class=\"pr-kbwrap\"><div class=\"pr-info\"\
-    ><span class=\"v-in\"></span><span class=\"v-keys\"></span></div><div class=\"pr-kb\"></div></div></div>';\n      var\
-    \ kb = DR.Keyboard(panel.querySelector('.pr-kb'), { skin: st.progress.equip.skins });\n      var lo = window.innerWidth\
-    \ < 700 ? 60 : 48, hi = 83;\n      kb.setRange(lo, hi);\n      DR.Input.setBase(lo);\n      DR.Input.capture(true);\n\
-    \      var $ch = panel.querySelector('.v-ch'), $nt = panel.querySelector('.v-nt');\n      function info() {\n        var\
-    \ mi = DR.Input.midi, b = DR.Input.base;\n        panel.querySelector('.v-in').innerHTML = mi.status === 'on' ? '\U0001F3B9\
-    \ <b>' + esc(mi.inputs[0]) + '</b>' : '⌨️ <b>Z</b>–<b>M</b> = ' + M.nameOf(b) + ' octave · <b>Q</b>–<b>U</b> = ' + M.nameOf(b\
-    \ + 12) + ' octave · <b>↑ ↓</b> shift';\n        panel.querySelector('.v-keys').innerHTML = mi.status === 'on' ? '' :\
-    \ '<a data-a=\"midi\" style=\"cursor:pointer;color:var(--dr-gold)\">Connect MIDI</a>';\n      }\n      info();\n     \
-    \ function heldNow() { return Object.keys(DR.Input.held).map(Number).sort(function (a, b) { return a - b; }); }\n    \
-    \  var off = DR.Input.on(function (t, m) {\n        if (t === 'midi' || t === 'base') { info(); return; }\n        if\
-    \ (t !== 'on' && t !== 'off') return;\n        var h = heldNow();\n        var show = h.length ? h : [];\n        var\
-    \ ch = M.detectChord(show.length >= 2 ? show : []);\n        if (show.length === 1) { $ch.textContent = M.nameOf(show[0]).replace(/-?\\\
-    d+$/, ''); $nt.textContent = M.nameOf(show[0]) + (DR.Input.held[show[0]] === 'midi' ? '' : ''); }\n        else if (show.length\
-    \ >= 2) { $ch.textContent = ch ? ch.symbol : '?'; $nt.textContent = (ch ? ch.name + ' · ' : '') + show.map(function (x)\
-    \ { return M.nameOf(x); }).join(' '); }\n      });\n      function mark() {\n        ['target', 'hint', 'lesson'].forEach(function\
-    \ (c) { kb.unmark(c); });\n        panel.querySelector('.v-keyl').style.display = ps.show === 'chord' || ps.show === 'none'\
-    \ ? 'none' : '';\n        panel.querySelector('.v-chl').style.display = ps.show === 'chord' ? '' : 'none';\n        var\
-    \ r = kb.range(), all = [], root = [], names = {};\n        if (ps.show === 'chord') {\n          var c = M.chordOf(ps.chord);\n\
-    \          if (!c) return;\n          var cp = M.pcs(c.notes);\n          for (var m = r[0]; m <= r[1]; m++) if (cp.indexOf(mod(m))\
-    \ >= 0) all.push(m);\n          c.notes.forEach(function (n, j) { names[n] = c.spelled[j]; });\n          kb.mark(all,\
-    \ 'hint'); kb.mark(c.notes, 'target', names);\n          return;\n        }\n        if (ps.show === 'none') return;\n\
-    \        var pk = M.parseKey(ps.key), steps = EXTRA_SCALES[ps.show] || M.SCALES[ps.show];\n        var pcs = steps.map(function\
-    \ (s) { return (pk[0] + s) % 12; });\n        var spelled = EXTRA_SCALES[ps.show] ? null : M.scaleNotes(ps.key, ps.show,\
-    \ 4);\n        for (var m2 = r[0]; m2 <= r[1]; m2++) {\n          var i = pcs.indexOf(mod(m2));\n          if (i < 0)\
-    \ continue;\n          (i === 0 ? root : all).push(m2);\n          names[m2] = spelled ? M.pretty(spelled[i], true) :\
-    \ M.pcName(mod(m2), M.keyUsesFlats(ps.key) || /b/.test(ps.key) || ps.show === 'blues');\n        }\n        kb.mark(all,\
-    \ 'lesson', names); kb.mark(root, 'target', names);\n      }\n      function mod(m) { return ((m % 12) + 12) % 12; }\n\
-    \      mark();\n      var metro = null;\n      function stopMetro() { if (metro) { clearInterval(metro.timer); metro =\
-    \ null; } var b = panel.querySelector('[data-a=\"metro\"]'); if (b) b.textContent = 'Start'; }\n      function startMetro()\
-    \ {\n        var c = DR.Sound.init(); if (!c) return;\n        var next = c.currentTime + 0.1, n = 0;\n        metro =\
-    \ { timer: setInterval(function () {\n          while (next < c.currentTime + 0.2) { if (n % 4 === 0) DR.Sound.click(next);\
-    \ else DR.Sound.clickSoft(next); next += 60 / ps.bpm; n++; }\n        }, 40) };\n        panel.querySelector('[data-a=\"\
-    metro\"]').textContent = 'Stop';\n      }\n      function save() { DR.store.set('dr.practice', ps); }\n      panel.addEventListener('input',\
-    \ function (e) {\n        var k = e.target.dataset.k;\n        if (!k) return;\n        ps[k] = k === 'bpm' ? +e.target.value\
-    \ : e.target.value;\n        if (k === 'bpm') panel.querySelector('.v-bpm').textContent = ps.bpm;\n        save(); mark();\n\
-    \      });\n      panel.addEventListener('click', function (e) {\n        var a = e.target.closest('[data-a]');\n    \
-    \    if (!a) return;\n        if (a.dataset.a === 'metro') { if (metro) stopMetro(); else startMetro(); }\n        if\
-    \ (a.dataset.a === 'midi') DR.Input.enableMidi(false).then(info);\n        if (a.dataset.a === 'hear') {\n          if\
-    \ (ps.show === 'chord') { var c = M.chordOf(ps.chord); if (c) { DR.Sound.play([c.notes], { gap: 1.2, dur: 1.4, roll: true\
-    \ }); } }\n          else if (ps.show !== 'none') {\n            var pk = M.parseKey(ps.key), steps = (EXTRA_SCALES[ps.show]\
-    \ || M.SCALES[ps.show]).concat([12]);\n            DR.Sound.play(steps.map(function (s) { return 60 + pk[0] + s; }), {\
-    \ gap: 0.32, dur: 0.4 });\n          }\n        }\n      });\n      st.cleanup = function () { off(); stopMetro(); kb.destroy();\
-    \ DR.Input.capture(false); };\n    }\n\n    /* ---------- badges ---------- */\n    function renderBadges(panel) {\n \
-    \     var have = st.progress.badges, n = Object.keys(have).length;\n      panel.innerHTML = '<div class=\"g-page\"><h2>Badges</h2><p\
-    \ class=\"lede\">' + n + ' of ' + st.catalog.badges.length + ' earned.</p><div class=\"bd-grid\">' +\n        st.catalog.badges.map(function\
+    ><span class=\"v-in\"></span>' +\n        '<span class=\"pr-oct\"><button data-a=\"oct-down\" aria-label=\"Lower octave\"\
+    >◀</button><b class=\"v-range\"></b><button data-a=\"oct-up\" aria-label=\"Higher octave\">▶</button></span>' +\n    \
+    \    '<span class=\"v-keys\"></span></div><div class=\"pr-kb\"></div></div></div>';\n      var $kb = panel.querySelector('.pr-kb');\n\
+    \      var kb = DR.Keyboard($kb, { skin: st.progress.equip.skins });\n      // The keyboard starts at `lo` (a C) and shows\
+    \ as many octaves as fit: on a touch screen every white key\n      // stays at least ~46px wide for a finger. The computer\
+    \ keys follow it (Z = lo), and ↑ ↓ move it too.\n      var lo = ps.lo || null, oct = 3;\n      function fit() {\n    \
+    \    var w = $kb.clientWidth || window.innerWidth;\n        oct = DR.touchUI() ? Math.max(1, Math.min(4, Math.floor(w\
+    \ / (7 * 46)))) : window.innerWidth < 700 ? 2 : 3;\n        if (lo == null) lo = oct >= 3 ? 48 : 60;\n        lo = Math.max(24,\
+    \ Math.min(lo, 108 - oct * 12, 84));\n        lo -= lo % 12;\n        kb.setRange(lo, lo + oct * 12 - 1);\n        if\
+    \ (DR.Input.base !== lo) DR.Input.setBase(lo);\n        panel.querySelector('.v-range').textContent = M.nameOf(lo) + '–'\
+    \ + M.nameOf(lo + oct * 12 - 1);\n        panel.querySelector('[data-a=\"oct-down\"]').disabled = lo <= 24;\n        panel.querySelector('[data-a=\"\
+    oct-up\"]').disabled = lo >= Math.min(108 - oct * 12, 84);\n        mark(); info();\n      }\n      function moveOct(d)\
+    \ { lo += 12 * d; DR.Input.releaseAll(); fit(); ps.lo = lo; save(); }\n      DR.Input.capture(true);\n      var $ch =\
+    \ panel.querySelector('.v-ch'), $nt = panel.querySelector('.v-nt');\n      function info() {\n        var mi = DR.Input.midi,\
+    \ b = DR.Input.base;\n        panel.querySelector('.v-in').innerHTML = mi.status === 'on' ? '\U0001F3B9 <b>' + esc(mi.inputs[0])\
+    \ + '</b>'\n          : DR.touchUI() ? '\U0001F446 <b>Tap the keys</b> · several fingers make a chord'\n          : '⌨️\
+    \ <b>Z</b>–<b>M</b> = ' + M.nameOf(b) + ' octave · <b>Q</b>–<b>U</b> = ' + M.nameOf(b + 12) + ' octave · <b>↑ ↓</b> shift';\n\
+    \        panel.querySelector('.v-keys').innerHTML = mi.status === 'on' || mi.status === 'unsupported' ? '' : '<a data-a=\"\
+    midi\" style=\"cursor:pointer;color:var(--dr-gold)\">Connect MIDI</a>';\n      }\n      function heldNow() { return Object.keys(DR.Input.held).map(Number).sort(function\
+    \ (a, b) { return a - b; }); }\n      var off = DR.Input.on(function (t, m) {\n        if (t === 'midi') { info(); return;\
+    \ }\n        // ↑ ↓ on the computer keyboard, or the touch setting changed\n        if (t === 'base') { if (m !== lo)\
+    \ { lo = m; ps.lo = lo; save(); } fit(); return; }\n        if (t !== 'on' && t !== 'off') return;\n        var h = heldNow();\n\
+    \        var show = h.length ? h : [];\n        var ch = M.detectChord(show.length >= 2 ? show : []);\n        if (show.length\
+    \ === 1) { $ch.textContent = M.nameOf(show[0]).replace(/-?\\d+$/, ''); $nt.textContent = M.nameOf(show[0]) + (DR.Input.held[show[0]]\
+    \ === 'midi' ? '' : ''); }\n        else if (show.length >= 2) { $ch.textContent = ch ? ch.symbol : '?'; $nt.textContent\
+    \ = (ch ? ch.name + ' · ' : '') + show.map(function (x) { return M.nameOf(x); }).join(' '); }\n      });\n      function\
+    \ mark() {\n        ['target', 'hint', 'lesson'].forEach(function (c) { kb.unmark(c); });\n        panel.querySelector('.v-keyl').style.display\
+    \ = ps.show === 'chord' || ps.show === 'none' ? 'none' : '';\n        panel.querySelector('.v-chl').style.display = ps.show\
+    \ === 'chord' ? '' : 'none';\n        var r = kb.range(), all = [], root = [], names = {};\n        if (ps.show === 'chord')\
+    \ {\n          var c = M.chordOf(ps.chord);\n          if (!c) return;\n          var cp = M.pcs(c.notes);\n         \
+    \ for (var m = r[0]; m <= r[1]; m++) if (cp.indexOf(mod(m)) >= 0) all.push(m);\n          c.notes.forEach(function (n,\
+    \ j) { names[n] = c.spelled[j]; });\n          kb.mark(all, 'hint'); kb.mark(c.notes, 'target', names);\n          return;\n\
+    \        }\n        if (ps.show === 'none') return;\n        var pk = M.parseKey(ps.key), steps = EXTRA_SCALES[ps.show]\
+    \ || M.SCALES[ps.show];\n        var pcs = steps.map(function (s) { return (pk[0] + s) % 12; });\n        var spelled\
+    \ = EXTRA_SCALES[ps.show] ? null : M.scaleNotes(ps.key, ps.show, 4);\n        for (var m2 = r[0]; m2 <= r[1]; m2++) {\n\
+    \          var i = pcs.indexOf(mod(m2));\n          if (i < 0) continue;\n          (i === 0 ? root : all).push(m2);\n\
+    \          names[m2] = spelled ? M.pretty(spelled[i], true) : M.pcName(mod(m2), M.keyUsesFlats(ps.key) || /b/.test(ps.key)\
+    \ || ps.show === 'blues');\n        }\n        kb.mark(all, 'lesson', names); kb.mark(root, 'target', names);\n      }\n\
+    \      function mod(m) { return ((m % 12) + 12) % 12; }\n      fit();\n      var lastW = $kb.clientWidth;\n      function\
+    \ onResize() { if ($kb.clientWidth !== lastW) { lastW = $kb.clientWidth; fit(); } }   // a tablet turned sideways\n  \
+    \    window.addEventListener('resize', onResize);\n      var metro = null;\n      function stopMetro() { if (metro) {\
+    \ clearInterval(metro.timer); metro = null; } var b = panel.querySelector('[data-a=\"metro\"]'); if (b) b.textContent\
+    \ = 'Start'; }\n      function startMetro() {\n        var c = DR.Sound.init(); if (!c) return;\n        var next = c.currentTime\
+    \ + 0.1, n = 0;\n        metro = { timer: setInterval(function () {\n          while (next < c.currentTime + 0.2) { if\
+    \ (n % 4 === 0) DR.Sound.click(next); else DR.Sound.clickSoft(next); next += 60 / ps.bpm; n++; }\n        }, 40) };\n\
+    \        panel.querySelector('[data-a=\"metro\"]').textContent = 'Stop';\n      }\n      function save() { DR.store.set('dr.practice',\
+    \ ps); }\n      panel.addEventListener('input', function (e) {\n        var k = e.target.dataset.k;\n        if (!k) return;\n\
+    \        ps[k] = k === 'bpm' ? +e.target.value : e.target.value;\n        if (k === 'bpm') panel.querySelector('.v-bpm').textContent\
+    \ = ps.bpm;\n        save(); mark();\n      });\n      panel.addEventListener('click', function (e) {\n        var a =\
+    \ e.target.closest('[data-a]');\n        if (!a) return;\n        if (a.dataset.a === 'metro') { if (metro) stopMetro();\
+    \ else startMetro(); }\n        if (a.dataset.a === 'midi') DR.Input.enableMidi(false).then(info);\n        if (a.dataset.a\
+    \ === 'oct-down' || a.dataset.a === 'oct-up') { DR.Sound.sfx('click'); moveOct(a.dataset.a === 'oct-up' ? 1 : -1); }\n\
+    \        if (a.dataset.a === 'hear') {\n          if (ps.show === 'chord') { var c = M.chordOf(ps.chord); if (c) { DR.Sound.play([c.notes],\
+    \ { gap: 1.2, dur: 1.4, roll: true }); } }\n          else if (ps.show !== 'none') {\n            var pk = M.parseKey(ps.key),\
+    \ steps = (EXTRA_SCALES[ps.show] || M.SCALES[ps.show]).concat([12]);\n            DR.Sound.play(steps.map(function (s)\
+    \ { return 60 + pk[0] + s; }), { gap: 0.32, dur: 0.4 });\n          }\n        }\n      });\n      st.cleanup = function\
+    \ () { off(); stopMetro(); window.removeEventListener('resize', onResize); kb.destroy(); DR.Input.capture(false); };\n\
+    \    }\n\n    /* ---------- badges ---------- */\n    function renderBadges(panel) {\n      var have = st.progress.badges,\
+    \ n = Object.keys(have).length;\n      panel.innerHTML = '<div class=\"g-page\"><h2>Badges</h2><p class=\"lede\">' + n\
+    \ + ' of ' + st.catalog.badges.length + ' earned.</p><div class=\"bd-grid\">' +\n        st.catalog.badges.map(function\
     \ (b) {\n          var d = have[b.key];\n          return '<div class=\"bd' + (d ? '' : ' no') + '\"><span class=\"ic\
     \ dr-emoji\">' + b.emoji + '</span><div><b>' + esc(b.name) + '</b><small>' + esc(b.desc) + (d ? '<br><span class=\"dr-gold-text\"\
     >Earned ' + esc(d) + '</span>' : '') + '</small></div></div>';\n        }).join('') + '</div></div>';\n    }\n\n    /*\
@@ -1867,24 +1932,28 @@ native_deps:
     \ if (b) DR.toast(b.emoji + ' Badge earned: <b>' + esc(b.name) + '</b>', 'gold'); }\n\n    /* ---------- profile & settings\
     \ ---------- */\n    function settingsHTML() {\n      var s = DR.settings;\n      function tog(k) { return '<span class=\"\
     tog' + (s[k] ? ' on' : '') + '\" data-tog=\"' + k + '\" role=\"switch\" aria-checked=\"' + !!s[k] + '\" tabindex=\"0\"\
-    ></span>'; }\n      var mi = DR.Input.midi;\n      return '<div class=\"pf-set\">' +\n        '<span>Sound effects</span>'\
-    \ + tog('sfx') +\n        '<span>Ambient music on the map</span>' + tog('ambient') +\n        '<span>Piano sound for computer\
-    \ keys and clicks</span>' + tog('keySound') +\n        '<span>Piano sound for MIDI keys<span class=\"sub\">Turn off if\
-    \ your keyboard has its own speakers.</span></span>' + tog('midiSound') +\n        '<span>Metronome during rushes</span>'\
-    \ + tog('metronome') +\n        '<span>Computer-key letters on the keys</span>' + tog('letters') +\n        '<span>Note\
-    \ names on the keys</span><span class=\"seg\" data-seg=\"labels\">' + [['none', 'Off'], ['c', 'C only'], ['all', 'All']].map(function\
-    \ (o) { return '<button data-v=\"' + o[0] + '\" class=\"' + (s.labels === o[0] ? 'on' : '') + '\">' + o[1] + '</button>';\
-    \ }).join('') + '</span>' +\n        '<span>Volume</span><input type=\"range\" min=\"0\" max=\"1\" step=\"0.05\" value=\"\
-    ' + s.volume + '\" data-vol>' +\n        '<span>MIDI keyboard<span class=\"sub\">' + (mi.status === 'on' ? esc(mi.inputs.join(',\
-    \ ')) : mi.status === 'unsupported' ? 'This browser has no Web MIDI. Use Chrome or Edge.' : mi.status === 'denied' ? 'Blocked.\
-    \ Allow MIDI in the browser\\'s site settings.' : mi.status === 'ready' ? 'Allowed, but no keyboard found. Plug one in.'\
-    \ : 'Not connected.') + '</span></span>' +\n        (mi.status === 'on' || mi.status === 'unsupported' ? '<span></span>'\
-    \ : '<button class=\"dr-btn small\" data-a=\"midi\">Connect</button>') + '</div>';\n    }\n    function bindSettings(el,\
-    \ redraw) {\n      el.addEventListener('click', function (e) {\n        var t = e.target.closest('[data-tog]'), sg = e.target.closest('[data-seg]\
-    \ button'), a = e.target.closest('[data-a=\"midi\"]');\n        if (t) {\n          var k = t.dataset.tog; DR.settings[k]\
-    \ = !DR.settings[k]; DR.saveSettings();\n          if (k === 'ambient') DR.Sound.ambient(DR.settings.ambient && st.screen\
-    \ === 'hub');\n          redraw();\n        }\n        if (sg) { DR.settings[sg.closest('[data-seg]').dataset.seg] = sg.dataset.v;\
-    \ DR.saveSettings(); if (stage) stage.keyboard.relabel(); redraw(); }\n        if (a) DR.Input.enableMidi(false).then(redraw);\n\
+    ></span>'; }\n      function seg(k, opts) { return '<span class=\"seg\" data-seg=\"' + k + '\">' + opts.map(function (o)\
+    \ { return '<button data-v=\"' + o[0] + '\" class=\"' + (s[k] === o[0] ? 'on' : '') + '\">' + o[1] + '</button>'; }).join('')\
+    \ + '</span>'; }\n      var mi = DR.Input.midi;\n      return '<div class=\"pf-set\">' +\n        '<span>Sound effects</span>'\
+    \ + tog('sfx') +\n        '<span>Ambient music on the map</span>' + tog('ambient') +\n        '<span>Piano sound for the\
+    \ on-screen and computer keys</span>' + tog('keySound') +\n        '<span>Piano sound for MIDI keys<span class=\"sub\"\
+    >Turn off if your keyboard has its own speakers.</span></span>' + tog('midiSound') +\n        '<span>Metronome during\
+    \ rushes</span>' + tog('metronome') +\n        '<span>Touch-screen piano<span class=\"sub\">Bigger keys and tap hints\
+    \ for tablets and phones. Auto turns it on for touch screens.</span></span>' + seg('touch', [['auto', 'Auto'], ['on',\
+    \ 'On'], ['off', 'Off']]) +\n        (DR.touchUI() ? '' : '<span>Computer-key letters on the keys</span>' + tog('letters'))\
+    \ +\n        '<span>Note names on the keys</span>' + seg('labels', [['none', 'Off'], ['c', 'C only'], ['all', 'All']])\
+    \ +\n        '<span>Volume</span><input type=\"range\" min=\"0\" max=\"1\" step=\"0.05\" value=\"' + s.volume + '\" data-vol>'\
+    \ +\n        '<span>MIDI keyboard<span class=\"sub\">' + (mi.status === 'on' ? esc(mi.inputs.join(', ')) : mi.status ===\
+    \ 'unsupported' ? 'This browser has no Web MIDI. Use Chrome or Edge.' : mi.status === 'denied' ? 'Blocked. Allow MIDI\
+    \ in the browser\\'s site settings.' : mi.status === 'ready' ? 'Allowed, but no keyboard found. Plug one in.' : 'Not connected.')\
+    \ + '</span></span>' +\n        (mi.status === 'on' || mi.status === 'unsupported' ? '<span></span>' : '<button class=\"\
+    dr-btn small\" data-a=\"midi\">Connect</button>') + '</div>';\n    }\n    function bindSettings(el, redraw) {\n      el.addEventListener('click',\
+    \ function (e) {\n        var t = e.target.closest('[data-tog]'), sg = e.target.closest('[data-seg] button'), a = e.target.closest('[data-a=\"\
+    midi\"]');\n        if (t) {\n          var k = t.dataset.tog; DR.settings[k] = !DR.settings[k]; DR.saveSettings();\n\
+    \          if (k === 'ambient') DR.Sound.ambient(DR.settings.ambient && st.screen === 'hub');\n          redraw();\n \
+    \       }\n        if (sg) {\n          var sk = sg.closest('[data-seg]').dataset.seg;\n          DR.settings[sk] = sg.dataset.v;\
+    \ DR.saveSettings();\n          if (sk === 'touch') DR.applyTouch();   // redraws keyboards and hint lines that are open\n\
+    \          if (stage) stage.keyboard.relabel();\n          redraw();\n        }\n        if (a) DR.Input.enableMidi(false).then(redraw);\n\
     \      });\n      el.addEventListener('input', function (e) { if (e.target.hasAttribute('data-vol')) DR.Sound.setVolume(+e.target.value);\
     \ });\n    }\n    function settingsModal() {\n      var m = DR.modal('<h2 style=\"font-size:28px\">Settings</h2><div class=\"\
     v-set\"></div>');\n      var box = m.el.querySelector('.v-set');\n      function draw() { box.innerHTML = settingsHTML();\

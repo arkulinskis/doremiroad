@@ -7,7 +7,9 @@ A piano-learning game for [anvil.works](https://anvil.works). You travel a road 
 
 ## Playing
 
-Play with a **MIDI keyboard** (Web MIDI: Chrome or Edge), the **computer keyboard** (`Z`–`M` and `Q`–`U` are two octaves, black keys on the row above, `↑`/`↓` shift octave) or the **mouse/touch**. By default any octave counts; steps marked "exact" need the right octave.
+Play with a **MIDI keyboard** (Web MIDI: Chrome or Edge), the **computer keyboard** (`Z`–`M` and `Q`–`U` are two octaves, black keys on the row above, `↑`/`↓` shift octave), the **mouse**, or the **touch-screen piano** on a tablet or phone. By default any octave counts; steps marked "exact" need the right octave.
+
+**Touch-screen piano.** On tablets and phones (any screen whose main pointer is a finger) the on-screen keys switch to touch mode: taller keys, no computer-key letters, "Tap the keys" hints, several fingers at once for chords, slide along the keys for a glissando, and tapping lower on a key plays louder. The Practice Room fits as many octaves as a finger can use (white keys at least ~46px) and has ◀ ▶ octave buttons (remembered; also on desktop). Settings → **Touch-screen piano**: Auto / On / Off. iPhone/iPad sound plays even with the silent switch on (Safari 17+); notes stop when the app goes to the background. A phone held sideways gets a compact level screen.
 
 **Challenge types** (a level is a list of steps):
 
