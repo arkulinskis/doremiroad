@@ -480,20 +480,23 @@ native_deps:
     \ return go();\n    if (!navigator.permissions || !navigator.permissions.query) return Promise.resolve(Input.midi);\n\
     \    return navigator.permissions.query({ name: 'midi' }).then(function (st) {\n      return st.state === 'granted' ?\
     \ go() : Input.midi;\n    }, function () { return Input.midi; });\n  };\n  if (DR.store.get('dr.midi', false)) setTimeout(function\
-    \ () { Input.enableMidi(true); }, 300);\n})();\n</script>\n\n<!-- ===== lib/music.js ===== -->\n<script>\n/* Doremi Road\
-    \ — music theory for the browser (DR.Music).\n   The same rules as server_code/Music.py: note names, chord symbols, Roman\
-    \ numerals, rush sequences.\n   Keep the two in step; tools/testing/music_parity.py compares them. Also: chord detection\
-    \ and staff positions. */\n(function (root) {\n  'use strict';\n  var DR = root.DR = root.DR || {};\n  var LETTERS = 'CDEFGAB';\n\
-    \  var LETTER_PC = [0, 2, 4, 5, 7, 9, 11];\n  var MAJOR = [0, 2, 4, 5, 7, 9, 11];\n  var MINOR = [0, 2, 3, 5, 7, 8, 10];\n\
-    \  var ACC = { '': 0, '#': 1, '##': 2, 'x': 2, 'b': -1, 'bb': -2, '♯': 1, '♭': -1 };\n  var CHORD_TYPES = {\n    '': [[0,\
-    \ 0], [4, 2], [7, 4]],\n    'm': [[0, 0], [3, 2], [7, 4]],\n    'dim': [[0, 0], [3, 2], [6, 4]],\n    'aug': [[0, 0],\
-    \ [4, 2], [8, 4]],\n    'sus2': [[0, 0], [2, 1], [7, 4]],\n    'sus4': [[0, 0], [5, 3], [7, 4]],\n    '5': [[0, 0], [7,\
-    \ 4]],\n    '6': [[0, 0], [4, 2], [7, 4], [9, 5]],\n    'm6': [[0, 0], [3, 2], [7, 4], [9, 5]],\n    '7': [[0, 0], [4,\
-    \ 2], [7, 4], [10, 6]],\n    'maj7': [[0, 0], [4, 2], [7, 4], [11, 6]],\n    'm7': [[0, 0], [3, 2], [7, 4], [10, 6]],\n\
-    \    'm7b5': [[0, 0], [3, 2], [6, 4], [10, 6]],\n    'dim7': [[0, 0], [3, 2], [6, 4], [9, 6]],\n    'add9': [[0, 0], [4,\
-    \ 2], [7, 4], [14, 1]],\n    '9': [[0, 0], [4, 2], [7, 4], [10, 6], [14, 1]]\n  };\n  var CHORD_ALIASES = { 'maj': '',\
-    \ 'M': '', 'min': 'm', '-': 'm', '°': 'dim', 'o': 'dim', '+': 'aug', 'ø': 'm7b5', 'ø7': 'm7b5',\n    '°7': 'dim7', 'o7':\
-    \ 'dim7', 'M7': 'maj7', 'Δ': 'maj7', 'Δ7': 'maj7', 'min7': 'm7', '-7': 'm7', 'dom7': '7', 'sus': 'sus4' };\n  var CHORD_NAMES\
+    \ () { Input.enableMidi(true); }, 300);\n})();\n</script>\n\n<!-- Prepsto feedback panel: the footer's \"Suggest an idea\"\
+    \ link (data-prepsto-open) slides it in. No floating button, no cookies, nothing loads until it is opened. Codes: APP_MAKER/prepsto-links.json\
+    \ -->\n<script src=\"https://prepsto.com/_/theme/widget.js\" data-prepsto=\"97wdde4\" data-button=\"false\" data-label=\"\
+    Suggest an idea\" async></script>\n\n<!-- ===== lib/music.js ===== -->\n<script>\n/* Doremi Road — music theory for the\
+    \ browser (DR.Music).\n   The same rules as server_code/Music.py: note names, chord symbols, Roman numerals, rush sequences.\n\
+    \   Keep the two in step; tools/testing/music_parity.py compares them. Also: chord detection and staff positions. */\n\
+    (function (root) {\n  'use strict';\n  var DR = root.DR = root.DR || {};\n  var LETTERS = 'CDEFGAB';\n  var LETTER_PC\
+    \ = [0, 2, 4, 5, 7, 9, 11];\n  var MAJOR = [0, 2, 4, 5, 7, 9, 11];\n  var MINOR = [0, 2, 3, 5, 7, 8, 10];\n  var ACC =\
+    \ { '': 0, '#': 1, '##': 2, 'x': 2, 'b': -1, 'bb': -2, '♯': 1, '♭': -1 };\n  var CHORD_TYPES = {\n    '': [[0, 0], [4,\
+    \ 2], [7, 4]],\n    'm': [[0, 0], [3, 2], [7, 4]],\n    'dim': [[0, 0], [3, 2], [6, 4]],\n    'aug': [[0, 0], [4, 2],\
+    \ [8, 4]],\n    'sus2': [[0, 0], [2, 1], [7, 4]],\n    'sus4': [[0, 0], [5, 3], [7, 4]],\n    '5': [[0, 0], [7, 4]],\n\
+    \    '6': [[0, 0], [4, 2], [7, 4], [9, 5]],\n    'm6': [[0, 0], [3, 2], [7, 4], [9, 5]],\n    '7': [[0, 0], [4, 2], [7,\
+    \ 4], [10, 6]],\n    'maj7': [[0, 0], [4, 2], [7, 4], [11, 6]],\n    'm7': [[0, 0], [3, 2], [7, 4], [10, 6]],\n    'm7b5':\
+    \ [[0, 0], [3, 2], [6, 4], [10, 6]],\n    'dim7': [[0, 0], [3, 2], [6, 4], [9, 6]],\n    'add9': [[0, 0], [4, 2], [7,\
+    \ 4], [14, 1]],\n    '9': [[0, 0], [4, 2], [7, 4], [10, 6], [14, 1]]\n  };\n  var CHORD_ALIASES = { 'maj': '', 'M': '',\
+    \ 'min': 'm', '-': 'm', '°': 'dim', 'o': 'dim', '+': 'aug', 'ø': 'm7b5', 'ø7': 'm7b5',\n    '°7': 'dim7', 'o7': 'dim7',\
+    \ 'M7': 'maj7', 'Δ': 'maj7', 'Δ7': 'maj7', 'min7': 'm7', '-7': 'm7', 'dom7': '7', 'sus': 'sus4' };\n  var CHORD_NAMES\
     \ = { '': 'major', 'm': 'minor', 'dim': 'diminished', 'aug': 'augmented', 'sus2': 'sus2', 'sus4': 'sus4', '5': 'power\
     \ chord',\n    '6': 'major sixth', 'm6': 'minor sixth', '7': 'dominant seventh', 'maj7': 'major seventh', 'm7': 'minor\
     \ seventh',\n    'm7b5': 'half-diminished', 'dim7': 'diminished seventh', 'add9': 'add nine', '9': 'dominant ninth' };\n\
@@ -1513,7 +1516,8 @@ native_deps:
     dr-pill v-tap\">\U0001F446 or tap the on-screen piano</span>'\n          : '<span class=\"dr-pill\">⌨️ or your computer\
     \ keyboard</span><span class=\"dr-pill\">\U0001F5B1️ or click the keys</span>') + '</div>' +\n        '</div><div class=\"\
     g-foot\"><a data-a=\"how\">How to play</a>' + (st.signedIn ? '' : '<a data-a=\"signup\">Create an account</a>') + '<a\
-    \ data-lk-open=\"overview\">Privacy &amp; Terms</a></div></div>';\n      titleAnim = DR.Art.titleScene(root.querySelector('canvas'));\n\
+    \ href=\"https://prepsto.com/#f/97wdde4\" target=\"_blank\" rel=\"noopener\" data-prepsto-open>Suggest an idea</a><a data-lk-open=\"\
+    overview\">Privacy &amp; Terms</a></div></div>';\n      titleAnim = DR.Art.titleScene(root.querySelector('canvas'));\n\
     \      midiPill(root.querySelector('.v-midi'));\n      var off = DR.Input.on(function (t) { if (t === 'midi') midiPill(root.querySelector('.v-midi'));\
     \ });\n      st.cleanup = off;\n      root.querySelector('.g-title').addEventListener('click', function (e) {\n      \
     \  var a = e.target.closest('[data-a]');\n        if (!a) return;\n        DR.Sound.sfx('click');\n        var w = a.dataset.a;\n\
