@@ -232,15 +232,49 @@ db_schema:
     server: full
     title: Users
 metadata:
+  description: 'A piano-learning game: play notes, chords and progressions on a MIDI keyboard, computer keys or touch screen,
+    train your ear and conquer the Realm of Harmony.'
   logo_img: asset:Gemini_Generated_Image_xjjsiuxjjsiuxjjs.jpg
-  title: Doremi Road
+  title: 'Doremi Road: learn piano and music theory as a game'
 name: Doremi Road
 native_deps:
-  head_html: "<script src=\"_/theme/legal-kit.js?v=4c0c8fd10c\"></script>\n\n<!-- Doremi Road — Native Libraries. tools/sync_to_anvil.py\
-    \ puts this (plus lib/*.js and every form's styles and scripts)\n     into anvil.yaml → native_deps.head_html. -->\n<meta\
-    \ name=\"viewport\" content=\"width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no\">\n<meta name=\"\
-    theme-color\" content=\"#0d1120\">\n<link rel=\"preconnect\" href=\"https://fonts.googleapis.com\">\n<link rel=\"preconnect\"\
-    \ href=\"https://fonts.gstatic.com\" crossorigin>\n<link href=\"https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500&family=Cinzel:wght@500;600;700&family=Inter:wght@400;500;600;700&family=Noto+Music&display=swap\"\
+  head_html: "<script src=\"_/theme/legal-kit.js?v=4c0c8fd10c\"></script>\n\n<!-- seo:start (APP_MAKER/seo: edit seo/apps/doremiroad.json\
+    \ and run seo.py, not here) -->\n<link rel=\"canonical\" href=\"https://doremiroad.com/\">\n<meta name=\"robots\" content=\"\
+    index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1\">\n<meta name=\"keywords\" content=\"learn\
+    \ piano game, piano lessons online, MIDI keyboard game, music theory game, ear training, chord practice, learn chords\
+    \ piano, piano for beginners, rhythm game piano\">\n<meta name=\"author\" content=\"Arkvital\">\n<meta property=\"og:type\"\
+    \ content=\"website\">\n<meta property=\"og:site_name\" content=\"Doremi Road\">\n<meta property=\"og:title\" content=\"\
+    Doremi Road: learn piano and music theory as a game\">\n<meta property=\"og:description\" content=\"A piano-learning game:\
+    \ play notes, chords and progressions on a MIDI keyboard, computer keys or touch screen, train your ear and conquer the\
+    \ Realm of Harmony.\">\n<meta property=\"og:locale\" content=\"en_CA\">\n<meta property=\"og:url\" content=\"https://doremiroad.com/\"\
+    >\n<meta property=\"og:image\" content=\"https://doremiroad.com/_/theme/og-image.png\">\n<meta property=\"og:image:width\"\
+    \ content=\"1200\"><meta property=\"og:image:height\" content=\"630\">\n<meta property=\"og:image:alt\" content=\"Doremi\
+    \ Road: Learn piano and music theory on a road across the Realm of Harmony\">\n<meta name=\"twitter:card\" content=\"\
+    summary_large_image\">\n<meta name=\"twitter:title\" content=\"Doremi Road: learn piano and music theory as a game\">\n\
+    <meta name=\"twitter:description\" content=\"A piano-learning game: play notes, chords and progressions on a MIDI keyboard,\
+    \ computer keys or touch screen, train your ear and conquer the Realm of Harmony.\">\n<meta name=\"twitter:image\" content=\"\
+    https://doremiroad.com/_/theme/og-image.png\">\n<link rel=\"alternate\" type=\"text/plain\" title=\"Doremi Road for AI\
+    \ assistants\" href=\"https://doremiroad.com/llms.txt\">\n<script type=\"application/ld+json\">{\"@context\": \"https://schema.org\"\
+    , \"@graph\": [{\"@type\": \"VideoGame\", \"@id\": \"https://doremiroad.com/#app\", \"name\": \"Doremi Road\", \"url\"\
+    : \"https://doremiroad.com/\", \"description\": \"A piano-learning game: play notes, chords and progressions on a MIDI\
+    \ keyboard, computer keys or touch screen, train your ear and conquer the Realm of Harmony.\", \"image\": \"https://doremiroad.com/_/theme/og-image.png\"\
+    , \"inLanguage\": \"en\", \"publisher\": {\"@id\": \"https://arkvital.com/#org\"}, \"keywords\": \"learn piano game, piano\
+    \ lessons online, MIDI keyboard game, music theory game, ear training, chord practice, learn chords piano, piano for beginners,\
+    \ rhythm game piano\", \"applicationCategory\": \"EducationalApplication\", \"operatingSystem\": \"Any (web browser)\"\
+    , \"browserRequirements\": \"Requires JavaScript and a modern web browser\", \"featureList\": [\"Lessons that light up\
+    \ the keys and the staff\", \"Notes, chords and progressions in every key\", \"Rush mode: notes and chords fall onto the\
+    \ keys in time\", \"Ear training: hear a note or chord and play or name it\", \"Works with a MIDI keyboard, computer keys,\
+    \ mouse or a touch-screen piano\", \"Stars and accuracy scores for every level\"], \"audience\": {\"@type\": \"Audience\"\
+    , \"audienceType\": \"Beginner and improving piano players, kids and adults\"}}, {\"@type\": \"WebSite\", \"@id\": \"\
+    https://doremiroad.com/#site\", \"url\": \"https://doremiroad.com/\", \"name\": \"Doremi Road\", \"publisher\": {\"@id\"\
+    : \"https://arkvital.com/#org\"}}, {\"@type\": \"Organization\", \"@id\": \"https://arkvital.com/#org\", \"name\": \"\
+    Arkvital\", \"url\": \"https://arkvital.com\", \"email\": \"arkvital@outlook.com\", \"address\": {\"@type\": \"PostalAddress\"\
+    , \"addressLocality\": \"Montreal\", \"addressRegion\": \"QC\", \"addressCountry\": \"CA\"}}]}</script>\n<!-- seo:end\
+    \ -->\n<!-- Doremi Road — Native Libraries. tools/sync_to_anvil.py puts this (plus lib/*.js and every form's styles and\
+    \ scripts)\n     into anvil.yaml → native_deps.head_html. -->\n<meta name=\"viewport\" content=\"width=device-width, initial-scale=1,\
+    \ maximum-scale=1, user-scalable=no\">\n<meta name=\"theme-color\" content=\"#0d1120\">\n<link rel=\"preconnect\" href=\"\
+    https://fonts.googleapis.com\">\n<link rel=\"preconnect\" href=\"https://fonts.gstatic.com\" crossorigin>\n<link href=\"\
+    https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500&family=Cinzel:wght@500;600;700&family=Inter:wght@400;500;600;700&family=Noto+Music&display=swap\"\
     \ rel=\"stylesheet\">\n<style>\n  :root {\n    --dr-bg: #0c1020;\n    --dr-bg-2: #121830;\n    --dr-panel: #171e36;\n\
     \    --dr-panel-2: #1f2744;\n    --dr-panel-3: #283157;\n    --dr-line: rgba(232, 212, 168, .14);\n    --dr-line-2: rgba(232,\
     \ 212, 168, .28);\n    --dr-ink: #f0e7d3;\n    --dr-ink-2: #c4bba6;\n    --dr-soft: #8d8a7e;\n    --dr-gold: #e2b25a;\n\
