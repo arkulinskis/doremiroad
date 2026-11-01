@@ -236,7 +236,7 @@ metadata:
   title: Doremi Road
 name: Doremi Road
 native_deps:
-  head_html: "<script src=\"_/theme/legal-kit.js?v=1695ea2d72\"></script>\n\n<!-- Doremi Road — Native Libraries. tools/sync_to_anvil.py\
+  head_html: "<script src=\"_/theme/legal-kit.js?v=4c0c8fd10c\"></script>\n\n<!-- Doremi Road — Native Libraries. tools/sync_to_anvil.py\
     \ puts this (plus lib/*.js and every form's styles and scripts)\n     into anvil.yaml → native_deps.head_html. -->\n<meta\
     \ name=\"viewport\" content=\"width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no\">\n<meta name=\"\
     theme-color\" content=\"#0d1120\">\n<link rel=\"preconnect\" href=\"https://fonts.googleapis.com\">\n<link rel=\"preconnect\"\
@@ -480,47 +480,47 @@ native_deps:
     \ return go();\n    if (!navigator.permissions || !navigator.permissions.query) return Promise.resolve(Input.midi);\n\
     \    return navigator.permissions.query({ name: 'midi' }).then(function (st) {\n      return st.state === 'granted' ?\
     \ go() : Input.midi;\n    }, function () { return Input.midi; });\n  };\n  if (DR.store.get('dr.midi', false)) setTimeout(function\
-    \ () { Input.enableMidi(true); }, 300);\n})();\n</script>\n\n<!-- Prepsto feedback panel: the footer's \"Suggest an idea\"\
-    \ link (data-prepsto-open) slides it in. No floating button, no cookies, nothing loads until it is opened. Codes: APP_MAKER/prepsto-links.json\
-    \ -->\n<script src=\"https://prepsto.com/_/theme/widget.js\" data-prepsto=\"97wdde4\" data-button=\"false\" data-label=\"\
-    Suggest an idea\" async></script>\n\n<!-- ===== lib/music.js ===== -->\n<script>\n/* Doremi Road — music theory for the\
-    \ browser (DR.Music).\n   The same rules as server_code/Music.py: note names, chord symbols, Roman numerals, rush sequences.\n\
-    \   Keep the two in step; tools/testing/music_parity.py compares them. Also: chord detection and staff positions. */\n\
-    (function (root) {\n  'use strict';\n  var DR = root.DR = root.DR || {};\n  var LETTERS = 'CDEFGAB';\n  var LETTER_PC\
-    \ = [0, 2, 4, 5, 7, 9, 11];\n  var MAJOR = [0, 2, 4, 5, 7, 9, 11];\n  var MINOR = [0, 2, 3, 5, 7, 8, 10];\n  var ACC =\
-    \ { '': 0, '#': 1, '##': 2, 'x': 2, 'b': -1, 'bb': -2, '♯': 1, '♭': -1 };\n  var CHORD_TYPES = {\n    '': [[0, 0], [4,\
-    \ 2], [7, 4]],\n    'm': [[0, 0], [3, 2], [7, 4]],\n    'dim': [[0, 0], [3, 2], [6, 4]],\n    'aug': [[0, 0], [4, 2],\
-    \ [8, 4]],\n    'sus2': [[0, 0], [2, 1], [7, 4]],\n    'sus4': [[0, 0], [5, 3], [7, 4]],\n    '5': [[0, 0], [7, 4]],\n\
-    \    '6': [[0, 0], [4, 2], [7, 4], [9, 5]],\n    'm6': [[0, 0], [3, 2], [7, 4], [9, 5]],\n    '7': [[0, 0], [4, 2], [7,\
-    \ 4], [10, 6]],\n    'maj7': [[0, 0], [4, 2], [7, 4], [11, 6]],\n    'm7': [[0, 0], [3, 2], [7, 4], [10, 6]],\n    'm7b5':\
-    \ [[0, 0], [3, 2], [6, 4], [10, 6]],\n    'dim7': [[0, 0], [3, 2], [6, 4], [9, 6]],\n    'add9': [[0, 0], [4, 2], [7,\
-    \ 4], [14, 1]],\n    '9': [[0, 0], [4, 2], [7, 4], [10, 6], [14, 1]]\n  };\n  var CHORD_ALIASES = { 'maj': '', 'M': '',\
-    \ 'min': 'm', '-': 'm', '°': 'dim', 'o': 'dim', '+': 'aug', 'ø': 'm7b5', 'ø7': 'm7b5',\n    '°7': 'dim7', 'o7': 'dim7',\
-    \ 'M7': 'maj7', 'Δ': 'maj7', 'Δ7': 'maj7', 'min7': 'm7', '-7': 'm7', 'dom7': '7', 'sus': 'sus4' };\n  var CHORD_NAMES\
-    \ = { '': 'major', 'm': 'minor', 'dim': 'diminished', 'aug': 'augmented', 'sus2': 'sus2', 'sus4': 'sus4', '5': 'power\
-    \ chord',\n    '6': 'major sixth', 'm6': 'minor sixth', '7': 'dominant seventh', 'maj7': 'major seventh', 'm7': 'minor\
-    \ seventh',\n    'm7b5': 'half-diminished', 'dim7': 'diminished seventh', 'add9': 'add nine', '9': 'dominant ninth' };\n\
-    \  var EAR_CHORDS = { 'major': '', 'minor': 'm', 'diminished': 'dim', 'augmented': 'aug', 'dominant 7th': '7', 'major\
-    \ 7th': 'maj7', 'minor 7th': 'm7' };\n  var INTERVALS = { m2: [1, 'minor 2nd'], M2: [2, 'major 2nd'], m3: [3, 'minor 3rd'],\
-    \ M3: [4, 'major 3rd'], P4: [5, 'perfect 4th'],\n    TT: [6, 'tritone'], P5: [7, 'perfect 5th'], m6: [8, 'minor 6th'],\
-    \ M6: [9, 'major 6th'], m7: [10, 'minor 7th'], M7: [11, 'major 7th'], P8: [12, 'octave'] };\n  var NOTE_RE = /^([A-Ga-g])(##|#|x|bb|b|♯|♭)?(-?\\\
-    d)$/;\n  var CHORD_RE = /^([A-G])(#|b|♯|♭)?([^/]*)(?:\\/([A-G])(#|b|♯|♭)?)?$/;\n  var KEY_RE = /^([A-G])(#|b|♯|♭)?(m|min|minor)?$/;\n\
-    \  var NUMERAL_RE = /^(b|#|♭|♯)?(VII|VI|V|IV|III|II|I|vii|vi|v|iv|iii|ii|i)(°|o|\\+|ø)?(maj7|M7|7)?$/;\n  var ROMAN =\
-    \ ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII'];\n\n  function mod(a, n) { return ((a % n) + n) % n; }\n  function accText(a)\
-    \ { return { 0: '', 1: '♯', 2: '\U0001D12A', '-1': '♭', '-2': '\U0001D12B' }[a] || ''; }\n  function spell(letter, pc)\
-    \ {\n    var a = mod(pc - LETTER_PC[letter], 12);\n    if (a > 6) a -= 12;\n    return LETTERS[letter] + accText(a);\n\
-    \  }\n  function parseNote(s) {\n    var m = NOTE_RE.exec(String(s == null ? '' : s).trim());\n    if (!m) return null;\n\
-    \    var letter = LETTERS.indexOf(m[1].toUpperCase());\n    var midi = (parseInt(m[3], 10) + 1) * 12 + LETTER_PC[letter]\
-    \ + ACC[m[2] || ''];\n    return midi >= 21 && midi <= 108 ? midi : null;\n  }\n  function noteLetter(s) {\n    var m\
-    \ = NOTE_RE.exec(String(s == null ? '' : s).trim());\n    return m ? LETTERS.indexOf(m[1].toUpperCase()) : null;\n  }\n\
-    \  var SHARPS = ['C', 'C♯', 'D', 'D♯', 'E', 'F', 'F♯', 'G', 'G♯', 'A', 'A♯', 'B'];\n  var FLATS = ['C', 'D♭', 'D', 'E♭',\
-    \ 'E', 'F', 'G♭', 'G', 'A♭', 'A', 'B♭', 'B'];\n  function nameOf(midi, flats) { return (flats ? FLATS : SHARPS)[mod(midi,\
-    \ 12)] + (Math.floor(midi / 12) - 1); }\n  function pcName(pc, flats) { return (flats ? FLATS : SHARPS)[mod(pc, 12)];\
-    \ }\n  // 'F#4' → 'F♯4' (pretty, keeps the written spelling); without the octave if noOct.\n  function pretty(s, noOct)\
-    \ {\n    var m = NOTE_RE.exec(String(s || '').trim());\n    if (!m) return String(s || '');\n    var a = { '': '', '#':\
-    \ '♯', '##': '\U0001D12A', 'x': '\U0001D12A', 'b': '♭', 'bb': '\U0001D12B', '♯': '♯', '♭': '♭' }[m[2] || ''];\n    return\
-    \ m[1].toUpperCase() + a + (noOct ? '' : m[3]);\n  }\n\n  function parseChord(sym, octave) {\n    var s = String(sym ==\
-    \ null ? '' : sym).trim();\n    var m = CHORD_RE.exec(s);\n    if (!m) return null;\n    var letter = LETTERS.indexOf(m[1]);\n\
+    \ () { Input.enableMidi(true); }, 300);\n})();\n</script>\n\n<!-- Prepsto feedback panel: every \"Submit feedback\" link\
+    \ and button slides it in (it is the only feedback channel). No floating button, no cookies, nothing loads until it is\
+    \ opened. Codes: APP_MAKER/prepsto-links.json -->\n<script src=\"https://prepsto.com/_/theme/widget.js\" data-prepsto=\"\
+    97wdde4\" data-button=\"false\" data-label=\"Submit feedback\" async></script>\n\n<!-- ===== lib/music.js ===== -->\n\
+    <script>\n/* Doremi Road — music theory for the browser (DR.Music).\n   The same rules as server_code/Music.py: note names,\
+    \ chord symbols, Roman numerals, rush sequences.\n   Keep the two in step; tools/testing/music_parity.py compares them.\
+    \ Also: chord detection and staff positions. */\n(function (root) {\n  'use strict';\n  var DR = root.DR = root.DR ||\
+    \ {};\n  var LETTERS = 'CDEFGAB';\n  var LETTER_PC = [0, 2, 4, 5, 7, 9, 11];\n  var MAJOR = [0, 2, 4, 5, 7, 9, 11];\n\
+    \  var MINOR = [0, 2, 3, 5, 7, 8, 10];\n  var ACC = { '': 0, '#': 1, '##': 2, 'x': 2, 'b': -1, 'bb': -2, '♯': 1, '♭':\
+    \ -1 };\n  var CHORD_TYPES = {\n    '': [[0, 0], [4, 2], [7, 4]],\n    'm': [[0, 0], [3, 2], [7, 4]],\n    'dim': [[0,\
+    \ 0], [3, 2], [6, 4]],\n    'aug': [[0, 0], [4, 2], [8, 4]],\n    'sus2': [[0, 0], [2, 1], [7, 4]],\n    'sus4': [[0,\
+    \ 0], [5, 3], [7, 4]],\n    '5': [[0, 0], [7, 4]],\n    '6': [[0, 0], [4, 2], [7, 4], [9, 5]],\n    'm6': [[0, 0], [3,\
+    \ 2], [7, 4], [9, 5]],\n    '7': [[0, 0], [4, 2], [7, 4], [10, 6]],\n    'maj7': [[0, 0], [4, 2], [7, 4], [11, 6]],\n\
+    \    'm7': [[0, 0], [3, 2], [7, 4], [10, 6]],\n    'm7b5': [[0, 0], [3, 2], [6, 4], [10, 6]],\n    'dim7': [[0, 0], [3,\
+    \ 2], [6, 4], [9, 6]],\n    'add9': [[0, 0], [4, 2], [7, 4], [14, 1]],\n    '9': [[0, 0], [4, 2], [7, 4], [10, 6], [14,\
+    \ 1]]\n  };\n  var CHORD_ALIASES = { 'maj': '', 'M': '', 'min': 'm', '-': 'm', '°': 'dim', 'o': 'dim', '+': 'aug', 'ø':\
+    \ 'm7b5', 'ø7': 'm7b5',\n    '°7': 'dim7', 'o7': 'dim7', 'M7': 'maj7', 'Δ': 'maj7', 'Δ7': 'maj7', 'min7': 'm7', '-7':\
+    \ 'm7', 'dom7': '7', 'sus': 'sus4' };\n  var CHORD_NAMES = { '': 'major', 'm': 'minor', 'dim': 'diminished', 'aug': 'augmented',\
+    \ 'sus2': 'sus2', 'sus4': 'sus4', '5': 'power chord',\n    '6': 'major sixth', 'm6': 'minor sixth', '7': 'dominant seventh',\
+    \ 'maj7': 'major seventh', 'm7': 'minor seventh',\n    'm7b5': 'half-diminished', 'dim7': 'diminished seventh', 'add9':\
+    \ 'add nine', '9': 'dominant ninth' };\n  var EAR_CHORDS = { 'major': '', 'minor': 'm', 'diminished': 'dim', 'augmented':\
+    \ 'aug', 'dominant 7th': '7', 'major 7th': 'maj7', 'minor 7th': 'm7' };\n  var INTERVALS = { m2: [1, 'minor 2nd'], M2:\
+    \ [2, 'major 2nd'], m3: [3, 'minor 3rd'], M3: [4, 'major 3rd'], P4: [5, 'perfect 4th'],\n    TT: [6, 'tritone'], P5: [7,\
+    \ 'perfect 5th'], m6: [8, 'minor 6th'], M6: [9, 'major 6th'], m7: [10, 'minor 7th'], M7: [11, 'major 7th'], P8: [12, 'octave']\
+    \ };\n  var NOTE_RE = /^([A-Ga-g])(##|#|x|bb|b|♯|♭)?(-?\\d)$/;\n  var CHORD_RE = /^([A-G])(#|b|♯|♭)?([^/]*)(?:\\/([A-G])(#|b|♯|♭)?)?$/;\n\
+    \  var KEY_RE = /^([A-G])(#|b|♯|♭)?(m|min|minor)?$/;\n  var NUMERAL_RE = /^(b|#|♭|♯)?(VII|VI|V|IV|III|II|I|vii|vi|v|iv|iii|ii|i)(°|o|\\\
+    +|ø)?(maj7|M7|7)?$/;\n  var ROMAN = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII'];\n\n  function mod(a, n) { return ((a %\
+    \ n) + n) % n; }\n  function accText(a) { return { 0: '', 1: '♯', 2: '\U0001D12A', '-1': '♭', '-2': '\U0001D12B' }[a]\
+    \ || ''; }\n  function spell(letter, pc) {\n    var a = mod(pc - LETTER_PC[letter], 12);\n    if (a > 6) a -= 12;\n  \
+    \  return LETTERS[letter] + accText(a);\n  }\n  function parseNote(s) {\n    var m = NOTE_RE.exec(String(s == null ? ''\
+    \ : s).trim());\n    if (!m) return null;\n    var letter = LETTERS.indexOf(m[1].toUpperCase());\n    var midi = (parseInt(m[3],\
+    \ 10) + 1) * 12 + LETTER_PC[letter] + ACC[m[2] || ''];\n    return midi >= 21 && midi <= 108 ? midi : null;\n  }\n  function\
+    \ noteLetter(s) {\n    var m = NOTE_RE.exec(String(s == null ? '' : s).trim());\n    return m ? LETTERS.indexOf(m[1].toUpperCase())\
+    \ : null;\n  }\n  var SHARPS = ['C', 'C♯', 'D', 'D♯', 'E', 'F', 'F♯', 'G', 'G♯', 'A', 'A♯', 'B'];\n  var FLATS = ['C',\
+    \ 'D♭', 'D', 'E♭', 'E', 'F', 'G♭', 'G', 'A♭', 'A', 'B♭', 'B'];\n  function nameOf(midi, flats) { return (flats ? FLATS\
+    \ : SHARPS)[mod(midi, 12)] + (Math.floor(midi / 12) - 1); }\n  function pcName(pc, flats) { return (flats ? FLATS : SHARPS)[mod(pc,\
+    \ 12)]; }\n  // 'F#4' → 'F♯4' (pretty, keeps the written spelling); without the octave if noOct.\n  function pretty(s,\
+    \ noOct) {\n    var m = NOTE_RE.exec(String(s || '').trim());\n    if (!m) return String(s || '');\n    var a = { '':\
+    \ '', '#': '♯', '##': '\U0001D12A', 'x': '\U0001D12A', 'b': '♭', 'bb': '\U0001D12B', '♯': '♯', '♭': '♭' }[m[2] || ''];\n\
+    \    return m[1].toUpperCase() + a + (noOct ? '' : m[3]);\n  }\n\n  function parseChord(sym, octave) {\n    var s = String(sym\
+    \ == null ? '' : sym).trim();\n    var m = CHORD_RE.exec(s);\n    if (!m) return null;\n    var letter = LETTERS.indexOf(m[1]);\n\
     \    var pc = mod(LETTER_PC[letter] + ACC[m[2] || ''], 12);\n    var q = m[3] || '';\n    if (Object.prototype.hasOwnProperty.call(CHORD_ALIASES,\
     \ q)) q = CHORD_ALIASES[q];\n    if (!Object.prototype.hasOwnProperty.call(CHORD_TYPES, q)) return null;\n    if (octave\
     \ == null) octave = pc <= 5 ? 4 : 3;\n    var root = (octave + 1) * 12 + pc;\n    var type = CHORD_TYPES[q];\n    var\
@@ -1516,7 +1516,7 @@ native_deps:
     dr-pill v-tap\">\U0001F446 or tap the on-screen piano</span>'\n          : '<span class=\"dr-pill\">⌨️ or your computer\
     \ keyboard</span><span class=\"dr-pill\">\U0001F5B1️ or click the keys</span>') + '</div>' +\n        '</div><div class=\"\
     g-foot\"><a data-a=\"how\">How to play</a>' + (st.signedIn ? '' : '<a data-a=\"signup\">Create an account</a>') + '<a\
-    \ href=\"https://prepsto.com/#f/97wdde4\" target=\"_blank\" rel=\"noopener\" data-prepsto-open>Suggest an idea</a><a data-lk-open=\"\
+    \ href=\"https://prepsto.com/#f/97wdde4\" target=\"_blank\" rel=\"noopener\" data-prepsto-open>Submit feedback</a><a data-lk-open=\"\
     overview\">Privacy &amp; Terms</a></div></div>';\n      titleAnim = DR.Art.titleScene(root.querySelector('canvas'));\n\
     \      midiPill(root.querySelector('.v-midi'));\n      var off = DR.Input.on(function (t) { if (t === 'midi') midiPill(root.querySelector('.v-midi'));\
     \ });\n      st.cleanup = off;\n      root.querySelector('.g-title').addEventListener('click', function (e) {\n      \
