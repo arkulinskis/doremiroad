@@ -27,7 +27,7 @@ class GamePage(GamePageTemplate):
             if fn not in dr_ui.GAME_CALLS:
                 return {"ok": False, "error": "Unknown action."}
             return dr_ui.call(fn, *(p.get("args") or []))
-        if event in ("login", "signup", "reset"):
+        if event in ("login", "signup", "reset", "google"):
             return dr_ui.auth(event, p)
         if event == "logout":
             anvil.users.logout()
