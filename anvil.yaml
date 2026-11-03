@@ -238,7 +238,7 @@ metadata:
   title: 'Doremi Road: learn piano and music theory as a game'
 name: Doremi Road
 native_deps:
-  head_html: "<script src=\"_/theme/legal-kit.js?v=692220b4bf\"></script>\n\n<!-- seo:start (APP_MAKER/seo: edit seo/apps/doremiroad.json\
+  head_html: "<script src=\"_/theme/legal-kit.js?v=ef966ef3a3\"></script>\n\n<!-- seo:start (APP_MAKER/seo: edit seo/apps/doremiroad.json\
     \ and run seo.py, not here) -->\n<link rel=\"canonical\" href=\"https://doremiroad.com/\">\n<meta name=\"robots\" content=\"\
     index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1\">\n<meta name=\"keywords\" content=\"learn\
     \ piano game, piano lessons online, MIDI keyboard game, music theory game, ear training, chord practice, learn chords\
@@ -1571,23 +1571,42 @@ native_deps:
     \ } .g-tabs { order: 5; width: 100%; margin: 0; } .g-tab { padding: 7px 10px; font-size: 13px; }\n    .g-me { margin-left:\
     \ auto; } .g-rank { min-width: 90px; }\n    .g-page { padding: 16px 14px 50px; } .g-page h2 { font-size: 28px; }\n   \
     \ .lv-grid { grid-template-columns: 1fr; } .lv-top h2 { font-size: 28px; }\n    .dr-modal { padding: 20px 16px; } .rs\
-    \ h2 { font-size: 30px; } .rs-acc { font-size: 50px; }\n    .pr-kbwrap { padding: 0 6px 10px; }\n  }\n</style>\n<script>\n\
-    (function () {\n  'use strict';\n  var DR = window.DR;\n  var esc = function (s) { return DR.esc(s); };\n  var M = DR.Music;\n\
-    \n  DR.define('game', function (root, init, emit) {\n    var GUEST_KEY = 'dr.guest';\n    var st = { signedIn: !!init.signed_in,\
-    \ guest: true, me: null, progress: null, status: null, journey: [], catalog: null,\n      daily: null, today: DR.today(),\
-    \ tab: 'map', sel: null, cleanup: null };\n    var stage = null, titleAnim = null, pauseOpen = null, curPlay = null;\n\
-    \    var C = {};  // catalog lookups\n\n    /* ---------- server ---------- */\n    function call(fn, args) {\n      return\
-    \ emit('call', { fn: fn, args: args || [] }).then(function (r) { return r; }, function (e) {\n        console.error(e);\
-    \ return { ok: false, error: 'Connection problem. Please try again.' };\n      });\n    }\n    var busyEl = null;\n  \
-    \  function busy(on, text) {\n      if (on && !busyEl) { busyEl = document.createElement('div'); busyEl.className = 'dr\
-    \ dr-loading'; busyEl.innerHTML = '<span class=\"dr-spin\"></span><span>' + esc(text || 'One moment…') + '</span>'; root.appendChild(busyEl);\
-    \ }\n      if (!on && busyEl) { busyEl.remove(); busyEl = null; }\n    }\n    function setCatalog(c) {\n      st.catalog\
-    \ = c;\n      C.codex = {}; c.codex.forEach(function (x) { C.codex[x.key] = x; });\n      C.composers = {}; c.composers.forEach(function\
-    \ (x) { C.composers[x.key] = x; });\n      C.badges = {}; c.badges.forEach(function (x) { C.badges[x.key] = x; });\n \
-    \     C.shop = {}; Object.keys(c.shop).forEach(function (k) { C.shop[k] = {}; c.shop[k].forEach(function (x) { C.shop[k][x.key]\
-    \ = x; }); });\n    }\n    function apply(r) {\n      if (!r || !r.ok) return r;\n      if (r.catalog) setCatalog(r.catalog);\n\
-    \      if (r.journey) st.journey = r.journey;\n      ['me', 'progress', 'status', 'daily', 'today'].forEach(function (k)\
-    \ { if (r[k] !== undefined) st[k] = r[k]; });\n      if (st.guest) DR.store.set(GUEST_KEY, st.progress);\n      return\
+    \ h2 { font-size: 30px; } .rs-acc { font-size: 50px; }\n    .pr-kbwrap { padding: 0 6px 10px; }\n  }\n/* Watch section:\
+    \ the app's YouTube video. Click to play; nothing loads from YouTube before the click. */\n.ytf .ytf-in { display: grid;\
+    \ grid-template-columns: minmax(0, .8fr) minmax(0, 1.2fr); gap: 40px; align-items: center; max-width: 1040px; margin:\
+    \ 0 auto; }\n.ytf .ytf-copy .eyebrow { display: inline-flex; align-items: center; gap: 8px; }\n.ytf .ytf-copy h2 { margin:\
+    \ 6px 0 10px; }\n.ytf .ytf-copy p { color: var(--c-muted); margin: 0 0 16px; }\n.ytf .ytf-link { font-weight: 700; }\n\
+    .ytf .ytf-frame { position: relative; aspect-ratio: 16 / 9; border-radius: var(--radius, 16px); overflow: hidden; background:\
+    \ #000; border: 1px solid var(--c-line); box-shadow: var(--shadow-lg); }\n.ytf .ytf-frame iframe { position: absolute;\
+    \ inset: 0; width: 100%; height: 100%; border: 0; }\n.ytf .ytf-cover { position: absolute; inset: 0; width: 100%; height:\
+    \ 100%; min-height: 0; padding: 0; margin: 0; border: 0; border-radius: 0; background: none; box-shadow: none; color:\
+    \ inherit; font: inherit; cursor: pointer; display: block; }\n.ytf .ytf-cover img { width: 100%; height: 100%; object-fit:\
+    \ cover; display: block; transition: transform .4s ease, filter .3s; }\n.ytf .ytf-cover:hover img { transform: scale(1.02);\
+    \ filter: brightness(.92); }\n.ytf .ytf-play { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);\
+    \ line-height: 0; filter: drop-shadow(0 6px 18px rgba(0, 0, 0, .35)); transition: transform .2s; }\n.ytf .ytf-cover:hover\
+    \ .ytf-play, .ytf .ytf-cover:focus-visible .ytf-play { transform: translate(-50%, -50%) scale(1.08); }\n.ytf .ytf-cover:focus-visible\
+    \ { outline: 3px solid var(--c-brand); outline-offset: -3px; }\n.ytf .ytf-len { position: absolute; right: 10px; bottom:\
+    \ 10px; background: rgba(0, 0, 0, .78); color: #fff; font-size: .78rem; font-weight: 700; line-height: 1.3; padding: 3px\
+    \ 7px; border-radius: 5px; }\n.ytf .ytf-note { font-size: .8rem; color: var(--c-muted); margin: 10px 2px 0; }\n@media\
+    \ (max-width: 800px) { .ytf .ytf-in { grid-template-columns: minmax(0, 1fr); gap: 22px; } }\n@media (max-width: 480px)\
+    \ { .ytf .ytf-play svg { width: 56px; height: 40px; } }\n  .ytf { --c-muted: var(--dr-ink-2); --c-line: var(--dr-line-2);\
+    \ --shadow-lg: var(--dr-shadow); --c-brand: var(--dr-gold); --radius: var(--dr-radius); }\n  .dr-modal.g-watch { max-width:\
+    \ 720px; }\n</style>\n<script>\n(function () {\n  'use strict';\n  var DR = window.DR;\n  var esc = function (s) { return\
+    \ DR.esc(s); };\n  var M = DR.Music;\n\n  DR.define('game', function (root, init, emit) {\n    var GUEST_KEY = 'dr.guest';\n\
+    \    var st = { signedIn: !!init.signed_in, guest: true, me: null, progress: null, status: null, journey: [], catalog:\
+    \ null,\n      daily: null, today: DR.today(), tab: 'map', sel: null, cleanup: null };\n    var stage = null, titleAnim\
+    \ = null, pauseOpen = null, curPlay = null;\n    var C = {};  // catalog lookups\n\n    /* ---------- server ----------\
+    \ */\n    function call(fn, args) {\n      return emit('call', { fn: fn, args: args || [] }).then(function (r) { return\
+    \ r; }, function (e) {\n        console.error(e); return { ok: false, error: 'Connection problem. Please try again.' };\n\
+    \      });\n    }\n    var busyEl = null;\n    function busy(on, text) {\n      if (on && !busyEl) { busyEl = document.createElement('div');\
+    \ busyEl.className = 'dr dr-loading'; busyEl.innerHTML = '<span class=\"dr-spin\"></span><span>' + esc(text || 'One moment…')\
+    \ + '</span>'; root.appendChild(busyEl); }\n      if (!on && busyEl) { busyEl.remove(); busyEl = null; }\n    }\n    function\
+    \ setCatalog(c) {\n      st.catalog = c;\n      C.codex = {}; c.codex.forEach(function (x) { C.codex[x.key] = x; });\n\
+    \      C.composers = {}; c.composers.forEach(function (x) { C.composers[x.key] = x; });\n      C.badges = {}; c.badges.forEach(function\
+    \ (x) { C.badges[x.key] = x; });\n      C.shop = {}; Object.keys(c.shop).forEach(function (k) { C.shop[k] = {}; c.shop[k].forEach(function\
+    \ (x) { C.shop[k][x.key] = x; }); });\n    }\n    function apply(r) {\n      if (!r || !r.ok) return r;\n      if (r.catalog)\
+    \ setCatalog(r.catalog);\n      if (r.journey) st.journey = r.journey;\n      ['me', 'progress', 'status', 'daily', 'today'].forEach(function\
+    \ (k) { if (r[k] !== undefined) st[k] = r[k]; });\n      if (st.guest) DR.store.set(GUEST_KEY, st.progress);\n      return\
     \ r;\n    }\n    function load() {\n      var p = st.guest ? call('guest_state', [DR.store.get(GUEST_KEY, null), DR.today()])\
     \ : call('get_state', [DR.today()]);\n      return p.then(function (r) {\n        if (!r || !r.ok) { DR.toast(esc((r &&\
     \ r.error) || 'Could not load the road.'), 'err'); return r; }\n        return apply(r);\n      });\n    }\n    function\
@@ -1625,41 +1644,58 @@ native_deps:
     \ + '</div>' +\n        '<div class=\"g-inputs\"><span class=\"dr-pill v-midi\"></span>' + (DR.touchUI() ? '<span class=\"\
     dr-pill v-tap\">\U0001F446 or tap the on-screen piano</span>'\n          : '<span class=\"dr-pill\">⌨️ or your computer\
     \ keyboard</span><span class=\"dr-pill\">\U0001F5B1️ or click the keys</span>') + '</div>' +\n        '</div><div class=\"\
-    g-foot\"><a data-a=\"how\">How to play</a>' + (st.signedIn ? '' : '<a data-a=\"signup\">Create an account</a>') + '<a\
-    \ href=\"https://prepsto.com/#f/97wdde4\" target=\"_blank\" rel=\"noopener\" data-prepsto-open>Submit feedback</a><a data-lk-open=\"\
-    overview\">Privacy &amp; Terms</a></div></div>';\n      titleAnim = DR.Art.titleScene(root.querySelector('canvas'));\n\
+    g-foot\"><a data-a=\"watch\">▶ Watch the trailer</a><a data-a=\"how\">How to play</a>' + (st.signedIn ? '' : '<a data-a=\"\
+    signup\">Create an account</a>') + '<a href=\"https://prepsto.com/#f/97wdde4\" target=\"_blank\" rel=\"noopener\" data-prepsto-open>Submit\
+    \ feedback</a><a data-lk-open=\"overview\">Privacy &amp; Terms</a></div></div>';\n      titleAnim = DR.Art.titleScene(root.querySelector('canvas'));\n\
     \      midiPill(root.querySelector('.v-midi'));\n      var off = DR.Input.on(function (t) { if (t === 'midi') midiPill(root.querySelector('.v-midi'));\
     \ });\n      st.cleanup = off;\n      root.querySelector('.g-title').addEventListener('click', function (e) {\n      \
     \  var a = e.target.closest('[data-a]');\n        if (!a) return;\n        DR.Sound.sfx('click');\n        var w = a.dataset.a;\n\
     \        if (w === 'guest') startGuest();\n        else if (w === 'continue') startSignedIn();\n        else if (w ===\
-    \ 'login' || w === 'signup') authModal(w);\n        else if (w === 'how') howTo();\n        else if (w === 'midi') DR.Input.enableMidi(false).then(function\
-    \ () { midiPill(root.querySelector('.v-midi')); });\n        else if (w === 'signout') emit('logout').then(function ()\
-    \ { st.signedIn = false; renderTitle(); });\n      });\n    }\n    function midiPill(el) {\n      if (!el) return;\n \
-    \     var mi = DR.Input.midi, tap = el.parentNode && el.parentNode.querySelector('.v-tap');\n      // iPad/iPhone browsers\
-    \ have no Web MIDI: on a touch screen just offer the on-screen piano\n      el.style.display = mi.status === 'unsupported'\
-    \ && tap ? 'none' : '';\n      if (tap) tap.textContent = mi.status === 'unsupported' ? '\U0001F446 Play on the on-screen\
-    \ piano: tap the keys' : '\U0001F446 or tap the on-screen piano';\n      if (mi.status === 'on') el.innerHTML = '\U0001F3B9\
-    \ <b>' + esc(mi.inputs[0]) + '</b> connected';\n      else if (mi.status === 'unsupported') el.innerHTML = '\U0001F3B9\
-    \ MIDI needs Chrome or Edge';\n      else if (mi.status === 'denied') el.innerHTML = '\U0001F3B9 MIDI was blocked by the\
-    \ browser';\n      else if (mi.status === 'ready') el.innerHTML = '\U0001F3B9 No MIDI keyboard found · plug one in';\n\
-    \      else el.innerHTML = '<a data-a=\"midi\" style=\"cursor:pointer;color:var(--dr-gold)\">\U0001F3B9 Connect a MIDI\
-    \ keyboard</a>';\n    }\n    function howTo() {\n      DR.modal('<h2 style=\"font-size:30px;margin-bottom:12px\">How to\
-    \ play</h2><ul class=\"how\" style=\"padding-left:18px;line-height:1.55\">' +\n        '<li><b>Travel the road.</b> Each\
-    \ territory of the knowledge map teaches one part of music. Clear a level to claim one of its provinces; clear them all\
-    \ to conquer the territory and unlock the next.</li>' +\n        '<li><b>Play with anything.</b> The on-screen piano (on\
-    \ a tablet or phone, tap the keys and use several fingers for chords; in the Practice Room, ◀ ▶ change the octave), a\
-    \ MIDI keyboard (Chrome or Edge), your computer keyboard (<span class=\"kbd\">Z</span>–<span class=\"kbd\">M</span> and\
-    \ <span class=\"kbd\">Q</span>–<span class=\"kbd\">U</span> are two octaves, black keys on the row above, <span class=\"\
-    kbd\">↑</span><span class=\"kbd\">↓</span> shift octave) or the mouse.</li>' +\n        '<li><b>Challenges.</b> Lessons\
-    \ teach; note and chord steps check you can find things; progressions use Roman numerals; rushes drop notes onto the keys\
-    \ in time; ear training asks what you hear; quizzes test the theory.</li>' +\n        '<li><b>Stars.</b> 60% accuracy\
-    \ clears a level, 80% earns two stars, 95% three. Three stars on some levels earn composer cards.</li>' +\n        '<li><b>Collect.</b>\
-    \ Codex pages, 20 composer cards, territory crests, 32 badges, ranks from Novice to Legend, and keyboards, note trails\
-    \ and banners from the shop, paid in ducats.</li>' +\n        '<li><b>Practise daily.</b> A fresh Daily Practice every\
-    \ day; keep a streak for bigger rewards. The Practice Room names any chord you play.</li></ul>', { cls: 'wide' });\n \
-    \   }\n    var GOOGLE_G = '<svg viewBox=\"0 0 48 48\" width=\"18\" height=\"18\" aria-hidden=\"true\"><path fill=\"#EA4335\"\
-    \ d=\"M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43\
-    \ 13.72 17.74 9.5 24 9.5z\"/>' +\n      '<path fill=\"#4285F4\" d=\"M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58\
+    \ 'login' || w === 'signup') authModal(w);\n        else if (w === 'how') howTo();\n        else if (w === 'watch') watchTrailer();\n\
+    \        else if (w === 'midi') DR.Input.enableMidi(false).then(function () { midiPill(root.querySelector('.v-midi'));\
+    \ });\n        else if (w === 'signout') emit('logout').then(function () { st.signedIn = false; renderTitle(); });\n \
+    \     });\n    }\n    function midiPill(el) {\n      if (!el) return;\n      var mi = DR.Input.midi, tap = el.parentNode\
+    \ && el.parentNode.querySelector('.v-tap');\n      // iPad/iPhone browsers have no Web MIDI: on a touch screen just offer\
+    \ the on-screen piano\n      el.style.display = mi.status === 'unsupported' && tap ? 'none' : '';\n      if (tap) tap.textContent\
+    \ = mi.status === 'unsupported' ? '\U0001F446 Play on the on-screen piano: tap the keys' : '\U0001F446 or tap the on-screen\
+    \ piano';\n      if (mi.status === 'on') el.innerHTML = '\U0001F3B9 <b>' + esc(mi.inputs[0]) + '</b> connected';\n   \
+    \   else if (mi.status === 'unsupported') el.innerHTML = '\U0001F3B9 MIDI needs Chrome or Edge';\n      else if (mi.status\
+    \ === 'denied') el.innerHTML = '\U0001F3B9 MIDI was blocked by the browser';\n      else if (mi.status === 'ready') el.innerHTML\
+    \ = '\U0001F3B9 No MIDI keyboard found · plug one in';\n      else el.innerHTML = '<a data-a=\"midi\" style=\"cursor:pointer;color:var(--dr-gold)\"\
+    >\U0001F3B9 Connect a MIDI keyboard</a>';\n    }\n    // The Doremi Road video on the Addanapp YouTube channel (APP_MAKER/youtube/manifest.json).\
+    \ Nothing loads from\n    // YouTube until the play button is pressed; the background music pauses while it plays and\
+    \ resumes on close.\n    var YT_VIDEO = 'RXNcbqR-jRs';\n    function watchTrailer() {\n      var played = false;\n   \
+    \   var m = DR.modal('<div class=\"ytf\"><h2 style=\"font-size:28px;margin:0 40px 8px 0\">Watch Doremi Road in about a\
+    \ minute</h2>' +\n        '<p class=\"dr-muted\">A short video tour of the game: the road, the levels and how you learn\
+    \ to play.</p>' +\n        '<div class=\"ytf-frame\"><button type=\"button\" class=\"ytf-cover\" aria-label=\"Play the\
+    \ Doremi Road video (1:15)\">' +\n        '<img src=\"_/theme/yt-cover.jpg\" alt=\"\" decoding=\"async\" width=\"960\"\
+    \ height=\"540\">' +\n        '<span class=\"ytf-play\" aria-hidden=\"true\"><svg viewBox=\"0 0 68 48\" width=\"68\" height=\"\
+    48\"><path d=\"M66.5 7.7a8.5 8.5 0 0 0-6-6C55.3.3 34 .3 34 .3s-21.3 0-26.5 1.4a8.5 8.5 0 0 0-6 6C.1 13 .1 24 .1 24s0 11\
+    \ 1.4 16.3a8.5 8.5 0 0 0 6 6c5.2 1.4 26.5 1.4 26.5 1.4s21.3 0 26.5-1.4a8.5 8.5 0 0 0 6-6C67.9 35 67.9 24 67.9 24s0-11-1.4-16.3z\"\
+    \ fill=\"#FF0033\"/><path d=\"M45 24 27 14v20z\" fill=\"#fff\"/></svg></span>' +\n        '<span class=\"ytf-len\">1:15</span></button></div>'\
+    \ +\n        '<p class=\"ytf-note\">The video loads from YouTube when you press play. <a href=\"https://www.youtube.com/watch?v='\
+    \ + YT_VIDEO + '\" target=\"_blank\" rel=\"noopener\" style=\"color:var(--dr-gold)\">Watch on YouTube ↗</a></p></div>',\n\
+    \        { cls: 'g-watch', onClose: function () { if (played && window.ArkMusic) ArkMusic.resume(); } });\n      m.el.querySelector('.ytf-cover').addEventListener('click',\
+    \ function () {\n        played = true;\n        if (window.ArkMusic) ArkMusic.pause();\n        m.el.querySelector('.ytf-frame').innerHTML\
+    \ = '<iframe src=\"https://www.youtube-nocookie.com/embed/' + YT_VIDEO + '?autoplay=1&rel=0&playsinline=1\" ' +\n    \
+    \      'title=\"Doremi Road video\" allow=\"autoplay; encrypted-media; picture-in-picture; fullscreen\" allowfullscreen\
+    \ referrerpolicy=\"strict-origin-when-cross-origin\"></iframe>';\n      });\n    }\n    function howTo() {\n      DR.modal('<h2\
+    \ style=\"font-size:30px;margin-bottom:12px\">How to play</h2><ul class=\"how\" style=\"padding-left:18px;line-height:1.55\"\
+    >' +\n        '<li><b>Travel the road.</b> Each territory of the knowledge map teaches one part of music. Clear a level\
+    \ to claim one of its provinces; clear them all to conquer the territory and unlock the next.</li>' +\n        '<li><b>Play\
+    \ with anything.</b> The on-screen piano (on a tablet or phone, tap the keys and use several fingers for chords; in the\
+    \ Practice Room, ◀ ▶ change the octave), a MIDI keyboard (Chrome or Edge), your computer keyboard (<span class=\"kbd\"\
+    >Z</span>–<span class=\"kbd\">M</span> and <span class=\"kbd\">Q</span>–<span class=\"kbd\">U</span> are two octaves,\
+    \ black keys on the row above, <span class=\"kbd\">↑</span><span class=\"kbd\">↓</span> shift octave) or the mouse.</li>'\
+    \ +\n        '<li><b>Challenges.</b> Lessons teach; note and chord steps check you can find things; progressions use Roman\
+    \ numerals; rushes drop notes onto the keys in time; ear training asks what you hear; quizzes test the theory.</li>' +\n\
+    \        '<li><b>Stars.</b> 60% accuracy clears a level, 80% earns two stars, 95% three. Three stars on some levels earn\
+    \ composer cards.</li>' +\n        '<li><b>Collect.</b> Codex pages, 20 composer cards, territory crests, 32 badges, ranks\
+    \ from Novice to Legend, and keyboards, note trails and banners from the shop, paid in ducats.</li>' +\n        '<li><b>Practise\
+    \ daily.</b> A fresh Daily Practice every day; keep a streak for bigger rewards. The Practice Room names any chord you\
+    \ play.</li></ul>', { cls: 'wide' });\n    }\n    var GOOGLE_G = '<svg viewBox=\"0 0 48 48\" width=\"18\" height=\"18\"\
+    \ aria-hidden=\"true\"><path fill=\"#EA4335\" d=\"M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62\
+    \ 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z\"/>' +\n      '<path fill=\"#4285F4\" d=\"M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58\
     \ 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z\"/>' +\n      '<path fill=\"#FBBC05\" d=\"M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92\
     \ 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z\"/>' +\n      '<path fill=\"#34A853\" d=\"M24 48c6.48 0 11.93-2.13\
     \ 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z\"\
