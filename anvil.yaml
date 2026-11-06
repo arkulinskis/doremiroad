@@ -1644,9 +1644,11 @@ native_deps:
     \ + '</div>' +\n        '<div class=\"g-inputs\"><span class=\"dr-pill v-midi\"></span>' + (DR.touchUI() ? '<span class=\"\
     dr-pill v-tap\">\U0001F446 or tap the on-screen piano</span>'\n          : '<span class=\"dr-pill\">⌨️ or your computer\
     \ keyboard</span><span class=\"dr-pill\">\U0001F5B1️ or click the keys</span>') + '</div>' +\n        '</div><div class=\"\
-    g-foot\"><a data-a=\"watch\">▶ Watch the trailer</a><a data-a=\"how\">How to play</a>' + (st.signedIn ? '' : '<a data-a=\"\
-    signup\">Create an account</a>') + '<a href=\"https://prepsto.com/#f/97wdde4\" target=\"_blank\" rel=\"noopener\" data-prepsto-open>Submit\
-    \ feedback</a><a data-lk-open=\"overview\">Privacy &amp; Terms</a></div></div>';\n      titleAnim = DR.Art.titleScene(root.querySelector('canvas'));\n\
+    g-foot\"><a data-a=\"watch\">▶ Watch the trailer</a><a data-a=\"how\">How to play</a><span class=\"g-org\">Contact developer:\
+    \ <a href=\"https://arkvital.com\" target=\"_blank\" rel=\"noopener\">arkvital.com</a> · Parent company: <a href=\"https://addanapp.com\"\
+    \ target=\"_blank\" rel=\"noopener\">addanapp.com</a></span>' + (st.signedIn ? '' : '<a data-a=\"signup\">Create an account</a>')\
+    \ + '<a href=\"https://prepsto.com/#f/97wdde4\" target=\"_blank\" rel=\"noopener\" data-prepsto-open>Submit feedback</a><a\
+    \ data-lk-open=\"overview\">Privacy &amp; Terms</a></div></div>';\n      titleAnim = DR.Art.titleScene(root.querySelector('canvas'));\n\
     \      midiPill(root.querySelector('.v-midi'));\n      var off = DR.Input.on(function (t) { if (t === 'midi') midiPill(root.querySelector('.v-midi'));\
     \ });\n      st.cleanup = off;\n      root.querySelector('.g-title').addEventListener('click', function (e) {\n      \
     \  var a = e.target.closest('[data-a]');\n        if (!a) return;\n        DR.Sound.sfx('click');\n        var w = a.dataset.a;\n\
