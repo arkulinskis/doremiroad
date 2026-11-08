@@ -7,7 +7,7 @@ around them with an offset instead of whole files.
 
 **What it is:** A piano-learning game: play notes, chords and progressions on a MIDI keyboard, computer keys or touch screen, train your ear and conquer the Realm of Harmony.
 **Live:** https://doremiroad.com · **Repo:** github.com/arkulinskis/doremiroad · **Layout:** native Anvil Forms · **Deploy:** master
-**Guide** (workflow, design rules, product knowledge): `doremiroad/.claude/skills/doremiroad/SKILL.md`
+**Guide** (workflow, design rules, product knowledge): `.claude/skills/doremiroad/SKILL.md`
 
 ## How to change it
 
