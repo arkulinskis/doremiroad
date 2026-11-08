@@ -267,6 +267,7 @@ native_deps:
     <meta name="apple-mobile-web-app-capable" content="yes">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <!-- design-ok: overused-font (Inter is the app body font; the facelift keeps it) -->
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500&family=Cinzel:wght@500;600;700&family=Inter:wght@400;500;600;700&family=Noto+Music&display=swap" rel="stylesheet">
     <link id="ui-favicon" rel="icon" type="image/svg+xml" href="_/theme/icon.svg?v=0be4d1b2c3">
     <link rel="apple-touch-icon" href="_/theme/icon-180.png?v=78c6a63130">
@@ -287,7 +288,7 @@ native_deps:
     <!-- Prepsto feedback panel: every "Submit feedback" link and button opens it (it is the only feedback channel). No floating button, no cookies, nothing loads until it is opened. Codes: APP_MAKER/prepsto-links.json -->
     <script src="https://prepsto.com/_/theme/widget.js" data-prepsto="97wdde4" data-button="false" data-label="Submit feedback" async></script>
     <link rel="stylesheet" href="_/theme/icons.css?v=8f508d76cd">
-    <link rel="stylesheet" href="_/theme/app.css?v=4556d5059f">
+    <link rel="stylesheet" href="_/theme/app.css?v=ee2db700e9">
     <script src="_/theme/app-kit.js?v=6ece07d012"></script>
     <!-- Engines (JavaScript, drawn by the Python Forms through client_code/dr.py): background music, the DR core
          (sound + MIDI/keys/touch input), music theory, the art (map, crests, staves), the level engine, page helpers -->

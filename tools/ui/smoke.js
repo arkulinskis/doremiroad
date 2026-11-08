@@ -61,7 +61,7 @@
     await closeDialog();
     await open('#codex', /The Codex/, () => ($$('.cx').length < 10 ? 'codex tiles missing' : ''));
     await open('#collection', /Composer cards/, () => ($$('.cd svg').length < 5 ? 'medallions missing' : ''));
-    await open('#practice', /You are playing/, () => (!$('.anvil-role-pr-kb .kb .k') ? 'no keyboard' : ''));
+    await open('#practice', /You are playing/, () => (!$('.pr-kb .kb .k') ? 'no keyboard' : ''));
     await open('#badges', /earned/, () => ($$('.bd').length < 10 ? 'badges missing' : ''));
     await open('#shop', /ducats/, () => ($$('.sh').length < 5 ? 'shop items missing' : ''));
     await open('#play/ivory-1', /Score/, () => (!$('.st .st-prompt') ? 'the level engine did not start' : ''));
@@ -124,7 +124,7 @@
     $('.a-lv .anvil-role-a-lv-name').click();
     await until(() => $$('.a-step').length >= 1 && /Checks/.test($('.ui-main').innerText), 'a level in the editor', 15000);
     log.push('ok   #admin level editor opens a level (' + $$('.a-step').length + ' steps)');
-    await open('#admin/territories', /Colour on the map/, () => (!$('.anvil-role-a-mapprev svg') ? 'no map preview' : ''));
+    await open('#admin/territories', /Colour on the map/, () => (!$('.a-mapprev svg') ? 'no map preview' : ''));
     await open('#admin/players', /Players/, () => ($$('.a-prow').length < 1 ? 'no players listed' : ''));
     await signOut();
     log.push(bad.length ? 'PROBLEMS: ' + bad.join(' | ') : 'PASSED');
