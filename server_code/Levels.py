@@ -101,7 +101,7 @@ def chord_seq(symbols, beats):
 TWELVE_BAR = chord_seq("C7 C7 C7 C7 F7 F7 C7 C7 G7 F7 C7 G7", 2)
 
 # ---------------------------------------------------------------- the built-in road
-TERRITORIES = [
+TERRITORIES: list = [
     {"key": "ivory", "name": "Ivory Shore", "emoji": "\U0001F3DD️", "color": "#d1b98a", "x": 13, "y": 80,
      "blurb": "Where every pianist begins: the shape of the keyboard, the names of the notes and your first tunes."},
     {"key": "sharpwood", "name": "Sharpwood", "emoji": "\U0001F332", "color": "#4f8c66", "x": 30, "y": 62,

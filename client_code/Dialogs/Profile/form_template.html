@@ -1,0 +1,28 @@
+<div class="ui dr pf">
+  <div class="pf-head">
+    <anvil-component type="Label" name="avatar_label" prop:role='["pf-avatar"]'></anvil-component>
+    <div>
+      <anvil-component type="Label" name="name_label" prop:role='["dlg-title"]'></anvil-component>
+      <anvil-component type="Label" name="rank_label" prop:role='["pf-rank"]'></anvil-component>
+      <anvil-component type="Label" name="who_label" prop:role='["pf-who"]'></anvil-component>
+    </div>
+  </div>
+  <div class="pf-rename" anvil:name="rename_box">
+    <label class="ui-field"><span>Your name on the leaderboards</span>
+      <anvil-component type="TextBox" name="name_box"></anvil-component>
+    </label>
+    <anvil-component type="Button" name="rename_button" prop:text="Rename" prop:role='["btn"]'></anvil-component>
+  </div>
+  <hr class="dr-rule">
+  <h3 class="pf-h">Settings</h3>
+  <anvil-component type="Doremi_Road.Components.SettingsPanel" name="settings"></anvil-component>
+  <hr class="dr-rule">
+  <div class="pf-actions">
+    <anvil-component type="Button" name="admin_button" prop:text="Level editor" prop:role='["btn"]'></anvil-component>
+    <anvil-component type="Button" name="how_button" prop:text="How to play" prop:role='["btn"]'></anvil-component>
+    <button type="button" class="ui-btn" data-lk-open="overview">Privacy &amp; Terms</button>
+    <anvil-component type="Button" name="signup_button" prop:text="Create an account" prop:role='["btn", "btn-primary"]'></anvil-component>
+    <anvil-component type="Button" name="signin_button" prop:text="Sign in" prop:role='["btn"]'></anvil-component>
+    <anvil-component type="Button" name="signout_button" prop:text="Sign out" prop:role='["btn"]'></anvil-component>
+  </div>
+</div>

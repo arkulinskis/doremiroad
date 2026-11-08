@@ -1,1 +1,25 @@
+/* theme.css: Anvil puts this file in the page itself, so it applies before the app has loaded.
+   Doremi Road's loading spinner (app start and server calls): a turning gold ring with a note, on the night navy.
+   Anvil substitutes its theme-colour tokens (percent sign, "color:", a name, percent sign) in this file,
+   so never write that pattern here. */
+html, body { background: #0c1020; }
 
+html .anvil-spinner, #loadingSpinner {
+  --anvil-spinner-size: 76px;
+  width: 76px !important; height: 76px !important; top: calc(50% - 38px); left: calc(50% - 38px);
+  border-radius: 50% !important; background: radial-gradient(circle closest-side, #171e36 86%, transparent 88%) !important;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, .5) !important; color: transparent;
+}
+html .anvil-spinner .anvil-spinner-svg, #loadingSpinner > svg, #loadingSpinner > img { display: none !important; }
+html .anvil-spinner::before, #loadingSpinner::before {
+  content: ""; position: absolute; inset: 0; border-radius: 50%; border: 3px solid rgba(226, 178, 90, .18);
+  border-top-color: #e2b25a; animation: dr-spin .9s linear infinite;
+}
+html .anvil-spinner::after, #loadingSpinner::after {
+  content: "\266A"; position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+  color: #e2b25a; font: 600 30px 'Cormorant Garamond', Georgia, serif;
+}
+@keyframes dr-spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) {
+  html .anvil-spinner::before, #loadingSpinner::before { animation-duration: 2.4s; }
+}

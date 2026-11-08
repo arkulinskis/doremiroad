@@ -1,0 +1,44 @@
+---
+custom_component: true
+properties: []
+events:
+  - name: changed
+    description: A setting changed (keyboards on screen may need to redraw their labels)
+toolbox_item:
+  title: Player settings
+  group: Doremi Road
+help_text: |
+  Sound, music, key labels, touch-screen piano, volume and MIDI (DR.settings, kept in this browser).
+---
+<div class="pf-set">
+  <span>Sound effects</span>
+  <anvil-component type="CheckBox" name="sfx_box" prop:role='["switch"]'></anvil-component>
+  <span>Ambient music on the map</span>
+  <anvil-component type="CheckBox" name="ambient_box" prop:role='["switch"]'></anvil-component>
+  <span>Piano sound for the on-screen and computer keys</span>
+  <anvil-component type="CheckBox" name="keysound_box" prop:role='["switch"]'></anvil-component>
+  <span>Piano sound for MIDI keys<span class="sub">Turn off if your keyboard has its own speakers.</span></span>
+  <anvil-component type="CheckBox" name="midisound_box" prop:role='["switch"]'></anvil-component>
+  <span>Metronome during rushes</span>
+  <anvil-component type="CheckBox" name="metronome_box" prop:role='["switch"]'></anvil-component>
+  <span>Touch-screen piano<span class="sub">Bigger keys and tap hints for tablets and phones. Auto turns it on for touch screens.</span></span>
+  <div class="ui-seg" role="group" aria-label="Touch-screen piano">
+    <button type="button" anvil:name="touch_auto" data-v="auto" anvil:on-dom:click="self.touch_click">Auto</button>
+    <button type="button" anvil:name="touch_on" data-v="on" anvil:on-dom:click="self.touch_click">On</button>
+    <button type="button" anvil:name="touch_off" data-v="off" anvil:on-dom:click="self.touch_click">Off</button>
+  </div>
+  <span anvil:name="letters_caption">Computer-key letters on the keys</span>
+  <anvil-component type="CheckBox" name="letters_box" prop:role='["switch"]'></anvil-component>
+  <span>Note names on the keys</span>
+  <div class="ui-seg" role="group" aria-label="Note names on the keys">
+    <button type="button" anvil:name="labels_none" data-v="none" anvil:on-dom:click="self.labels_click">Off</button>
+    <button type="button" anvil:name="labels_c" data-v="c" anvil:on-dom:click="self.labels_click">C only</button>
+    <button type="button" anvil:name="labels_all" data-v="all" anvil:on-dom:click="self.labels_click">All</button>
+  </div>
+  <span>Volume</span>
+  <input type="range" min="0" max="1" step="0.05" anvil:dom-node="volume" aria-label="Volume">
+  <span>MIDI keyboard<anvil-component type="Label" name="midi_label" prop:role='["sub"]'></anvil-component></span>
+  <span class="pf-midi">
+    <anvil-component type="Button" name="midi_button" prop:text="Connect" prop:role='["btn", "btn-sm"]'></anvil-component>
+  </span>
+</div>

@@ -1,0 +1,9 @@
+<anvil-form layout="Doremi_Road.Layouts.Shell">
+  <anvil-block slot="content">
+    <div class="g-page">
+      <anvil-component type="Label" name="title_label" prop:role='["page-title"]' prop:text="The Codex"></anvil-component>
+      <anvil-component type="Label" name="lede_label" prop:role='["lede"]'></anvil-component>
+      <anvil-component type="RepeatingPanel" name="topics_panel" prop:item_template="Doremi_Road.Items.CodexTopic"></anvil-component>
+    </div>
+  </anvil-block>
+</anvil-form>

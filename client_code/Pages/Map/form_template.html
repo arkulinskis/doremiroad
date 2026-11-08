@@ -1,0 +1,50 @@
+<anvil-form layout="Doremi_Road.Layouts.Shell">
+  <anvil-block slot="content">
+    <div class="m-page">
+      <h1 class="ui-sr">The map of the Realm of Harmony</h1>
+      <div class="m-wrap" anvil:name="wrap">
+        <anvil-component type="Doremi_Road.Components.KnowledgeMap" name="map_view"></anvil-component>
+        <aside class="m-side" aria-label="Territory">
+          <div class="dr-card m-daily">
+            <anvil-component type="Label" name="daily_icon" prop:role='["m-daily-ic"]' prop:text="📜"></anvil-component>
+            <div class="m-daily-txt">
+              <b>Daily Practice</b>
+              <anvil-component type="Label" name="daily_text" prop:role='["m-daily-sub"]'></anvil-component>
+            </div>
+            <anvil-component type="Button" name="daily_button" prop:text="Start" prop:role='["btn", "btn-primary", "btn-sm"]'></anvil-component>
+          </div>
+
+          <div class="dr-card m-terrcard">
+            <div class="m-thead">
+              <anvil-component type="Doremi_Road.Components.Art" name="crest"></anvil-component>
+              <div>
+                <anvil-component type="Label" name="terr_name" prop:role='["m-terr-name"]'></anvil-component>
+                <anvil-component type="Label" name="terr_blurb" prop:role='["m-terr-blurb"]'></anvil-component>
+              </div>
+            </div>
+            <div class="m-prog">
+              <anvil-component type="Label" name="prog_text"></anvil-component>
+              <span class="bar"><i anvil:name="prog_bar"></i></span>
+              <anvil-component type="Label" name="prog_stars" prop:role='["m-stars"]'></anvil-component>
+            </div>
+            <anvil-component type="Label" name="terr_note" prop:role='["m-note"]'></anvil-component>
+            <div class="m-levels">
+              <anvil-component type="RepeatingPanel" name="levels_panel" prop:item_template="Doremi_Road.Items.LevelRow" prop:role='["m-levels-list"]'></anvil-component>
+            </div>
+            <anvil-component type="Label" name="lock_note" prop:role='["m-locknote"]'></anvil-component>
+          </div>
+
+          <div class="dr-card m-victory" anvil:name="victory">
+            <b>👑 The Realm of Harmony is yours</b>
+            <p class="small muted">Every territory conquered. Go back for three stars everywhere, and keep your daily streak.</p>
+          </div>
+        </aside>
+      </div>
+      <div class="g-page" anvil:name="failed_box">
+        <h2>The road didn't load</h2>
+        <p class="muted">Check your connection and try again.</p>
+        <anvil-component type="Button" name="retry_button" prop:text="Try again" prop:role='["btn", "btn-primary"]'></anvil-component>
+      </div>
+    </div>
+  </anvil-block>
+</anvil-form>

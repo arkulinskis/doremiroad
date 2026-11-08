@@ -1,0 +1,52 @@
+---
+layout_metadata:
+  title: Hub frame
+  description: The hub bar (brand, the six tabs, rank, ducats, streak, profile button), the page, and the footer
+---
+<div class="ui ui-shell dr">
+  <header class="ui-header g-bar">
+    <div class="ui-header-in">
+      <a class="ui-brand g-brand" anvil:name="brand" href="#landing" aria-label="Doremi Road title screen">Doremi <i>Road</i></a>
+      <nav class="ui-nav g-tabs" aria-label="Main">
+        <anvil-component type="RepeatingPanel" name="nav_panel" prop:item_template="Doremi_Road.Items.NavLink" prop:role='["contents"]'></anvil-component>
+      </nav>
+      <div class="g-me" anvil:name="me_box">
+        <a class="g-rank" href="#" anvil:name="rank_link" anvil:on-dom:click="self.profile_click">
+          <span class="g-rank-top">
+            <anvil-component type="Label" name="rank_name" prop:role='["g-rank-name"]'></anvil-component>
+            <anvil-component type="Label" name="rank_xp" prop:role='["g-rank-xp"]'></anvil-component>
+          </span>
+          <span class="g-xp"><i anvil:name="xp_bar"></i></span>
+        </a>
+        <anvil-component type="Label" name="ducats" prop:role='["pill"]' prop:tooltip="Ducats"></anvil-component>
+        <anvil-component type="Label" name="streak" prop:role='["pill"]' prop:tooltip="Daily practice streak"></anvil-component>
+        <anvil-component type="Button" name="avatar_button" prop:role='["avatar"]' prop:tooltip="Profile and settings"></anvil-component>
+      </div>
+      <div class="g-guest" anvil:name="guest_box">
+        <a class="ui-btn ghost sm" href="#auth">Sign in</a>
+      </div>
+    </div>
+  </header>
+
+  <main class="ui-main">
+    <anvil-slot name="content"></anvil-slot>
+  </main>
+
+  <footer class="ui-footer">
+    <div class="ui-footer-in">
+      <div class="ui-footer-brand">
+        <a class="ui-brand g-brand" href="#landing">Doremi <i>Road</i></a>
+        <p class="small muted">Learn the piano one milestone at a time.</p>
+        <p class="small muted ui-footer-org">Contact developer: <a href="https://arkvital.com" target="_blank" rel="noopener">arkvital.com</a><br>Parent company: <a href="https://addanapp.com" target="_blank" rel="noopener">addanapp.com</a></p>
+      </div>
+      <div class="ui-footer-links">
+        <a href="#landing">About</a>
+        <a href="https://prepsto.com/#f/97wdde4" target="_blank" rel="noopener" data-prepsto-open>Submit feedback</a>
+        <button type="button" data-lk-open="overview">Privacy &amp; Terms</button>
+      </div>
+      <div class="ui-footer-legal">
+        <anvil-component type="Label" name="copyright_label" prop:text="© Doremi Road" prop:role='["fine-print"]'></anvil-component>
+      </div>
+    </div>
+  </footer>
+</div>

@@ -1,0 +1,74 @@
+<anvil-form layout="Doremi_Road.Layouts.Shell">
+  <anvil-block slot="content">
+    <div class="lp">
+      <section class="g-title">
+        <anvil-component type="Doremi_Road.Components.TitleScene" name="scene"></anvil-component>
+        <div class="g-title-in">
+          <h1 class="g-logo"><span class="g-solf" aria-hidden="true">Do · Re · Mi · Fa · Sol · La · Ti</span>Doremi <i>Road</i></h1>
+          <p class="g-tag">Learn the piano one milestone at a time. Read, hear and play your way across the Realm of Harmony.</p>
+          <div class="g-title-btns">
+            <anvil-component type="Button" name="begin_button" prop:text="Begin the journey" prop:role='["btn", "btn-primary", "btn-lg"]'></anvil-component>
+            <anvil-component type="Button" name="continue_button" prop:text="Continue the journey" prop:role='["btn", "btn-primary", "btn-lg"]'></anvil-component>
+            <anvil-component type="Button" name="signin_button" prop:text="Sign in" prop:role='["btn", "btn-lg"]'></anvil-component>
+            <anvil-component type="Button" name="signout_button" prop:text="Sign out" prop:role='["btn", "btn-lg"]'></anvil-component>
+          </div>
+          <div class="g-inputs">
+            <anvil-component type="Label" name="midi_pill" prop:role='["pill", "pill-glass"]'></anvil-component>
+            <anvil-component type="Button" name="midi_button" prop:text="🎹 Connect a MIDI keyboard" prop:role='["pill-btn"]'></anvil-component>
+            <span class="g-inputs-keys" anvil:name="keys_pills">
+              <span class="pill pill-glass">⌨️ or your computer keyboard</span>
+              <span class="pill pill-glass">🖱️ or click the keys</span>
+            </span>
+            <anvil-component type="Label" name="tap_pill" prop:role='["pill", "pill-glass"]' prop:text="👆 or tap the on-screen piano"></anvil-component>
+          </div>
+        </div>
+        <nav class="g-foot" aria-label="More">
+          <a href="#watch" anvil:on-dom:click="self.jump_click" data-to="watch">▶ Watch the trailer</a>
+          <a href="#how" anvil:on-dom:click="self.jump_click" data-to="how">How to play</a>
+          <a href="#auth/signup" anvil:name="signup_link">Create an account</a>
+          <a href="https://prepsto.com/#f/97wdde4" target="_blank" rel="noopener" data-prepsto-open>Submit feedback</a>
+          <button type="button" data-lk-open="overview">Privacy &amp; Terms</button>
+        </nav>
+      </section>
+
+      <section class="lp-section ytf" id="watch">
+        <div class="ui-wrap">
+          <div class="ytf-in">
+            <div class="ytf-copy">
+              <h2 class="lp-h2">Watch Doremi Road in about a minute</h2>
+              <p>A short video tour of the game: the road, the levels and how you learn to play.</p>
+              <a class="ytf-link" href="https://www.youtube.com/watch?v=RXNcbqR-jRs" target="_blank" rel="noopener"><svg viewBox="0 0 28 20" width="20" height="14" aria-hidden="true"><rect width="28" height="20" rx="5" fill="#FF0033"/><path d="M11.2 5.8v8.4l7.3-4.2z" fill="#fff"/></svg>Watch on YouTube &#8599;</a>
+            </div>
+            <div>
+              <div class="ytf-frame" anvil:dom-node="yt_frame">
+                <button type="button" class="ytf-cover" anvil:dom-node="yt_cover" aria-label="Play the Doremi Road video (1:15)">
+                  <img src="_/theme/yt-cover.jpg" alt="" loading="lazy" decoding="async" width="960" height="540">
+                  <span class="ytf-play" aria-hidden="true"><svg viewBox="0 0 68 48" width="68" height="48"><path d="M66.5 7.7a8.5 8.5 0 0 0-6-6C55.3.3 34 .3 34 .3s-21.3 0-26.5 1.4a8.5 8.5 0 0 0-6 6C.1 13 .1 24 .1 24s0 11 1.4 16.3a8.5 8.5 0 0 0 6 6c5.2 1.4 26.5 1.4 26.5 1.4s21.3 0 26.5-1.4a8.5 8.5 0 0 0 6-6C67.9 35 67.9 24 67.9 24s0-11-1.4-16.3z" fill="#FF0033"/><path d="M45 24 27 14v20z" fill="#fff"/></svg></span>
+                  <span class="ytf-len">1:15</span>
+                </button>
+              </div>
+              <p class="ytf-note">The video loads from YouTube when you press play.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="lp-section lp-how" id="how">
+        <div class="ui-wrap ui-narrow">
+          <h2 class="lp-h2">How to play</h2>
+          <ul class="how">
+            <li><b>Travel the road.</b> Each territory of the knowledge map teaches one part of music. Clear a level to claim one of its provinces; clear them all to conquer the territory and unlock the next.</li>
+            <li><b>Play with anything.</b> The on-screen piano (on a tablet or phone, tap the keys and use several fingers for chords; in the Practice Room, ◀ ▶ change the octave), a MIDI keyboard (Chrome or Edge), your computer keyboard (<span class="kbd">Z</span>–<span class="kbd">M</span> and <span class="kbd">Q</span>–<span class="kbd">U</span> are two octaves, black keys on the row above, <span class="kbd">↑</span> <span class="kbd">↓</span> shift octave) or the mouse.</li>
+            <li><b>Challenges.</b> Lessons teach; note and chord steps check you can find things; progressions use Roman numerals; rushes drop notes onto the keys in time; ear training asks what you hear; quizzes test the theory.</li>
+            <li><b>Stars.</b> 60% accuracy clears a level, 80% earns two stars, 95% three. Three stars on some levels earn composer cards.</li>
+            <li><b>Collect.</b> Codex pages, 20 composer cards, territory crests, 32 badges, ranks from Novice to Legend, and keyboards, note trails and banners from the shop, paid in ducats.</li>
+            <li><b>Practise daily.</b> A fresh Daily Practice every day; keep a streak for bigger rewards. The Practice Room names any chord you play.</li>
+          </ul>
+          <div class="lp-cta">
+            <a class="ui-btn primary lg" href="#map">Open the map</a>
+          </div>
+        </div>
+      </section>
+    </div>
+  </anvil-block>
+</anvil-form>

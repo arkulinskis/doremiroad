@@ -52,7 +52,7 @@ def ensure_seeded():
 def seed_defaults():
     """Add the built-in territories and levels that aren't in the tables yet. Returns how many were added."""
     added = 0
-    have_t = {r["key"]: r for r in app_tables.territories.search()}
+    have_t: dict = {r["key"]: r for r in app_tables.territories.search()}
     for i, t in enumerate(L.TERRITORIES):
         if t["key"] not in have_t:
             have_t[t["key"]] = app_tables.territories.add_row(

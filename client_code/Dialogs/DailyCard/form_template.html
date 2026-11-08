@@ -1,0 +1,15 @@
+<div class="ui dr lv-card">
+  <div class="lv-top">
+    <anvil-component type="Label" name="title_label" prop:role='["dlg-title"]' prop:text="Daily Practice"></anvil-component>
+    <anvil-component type="Label" name="where_label" prop:role='["lv-where"]'></anvil-component>
+    <anvil-component type="Label" name="intro_label" prop:role='["lv-intro"]'></anvil-component>
+  </div>
+  <anvil-component type="RepeatingPanel" name="steps_panel" prop:item_template="Doremi_Road.Items.StepChip" prop:role='["lv-steps"]'></anvil-component>
+  <div class="lv-box">
+    <h3>Rewards</h3>
+    <anvil-component type="RepeatingPanel" name="rewards_panel" prop:item_template="Doremi_Road.Items.RewardLine"></anvil-component>
+  </div>
+  <div class="lv-btns">
+    <anvil-component type="Button" name="start_button" prop:text="Start ▸" prop:role='["btn", "btn-primary", "btn-lg"]'></anvil-component>
+  </div>
+</div>

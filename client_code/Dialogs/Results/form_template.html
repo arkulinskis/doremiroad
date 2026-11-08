@@ -1,0 +1,29 @@
+<div class="ui dr rs">
+  <anvil-component type="Label" name="title_label" prop:role='["rs-title"]'></anvil-component>
+  <anvil-component type="Label" name="where_label" prop:role='["rs-sub"]'></anvil-component>
+  <div class="rs-stars" anvil:name="stars_box">
+    <span class="rs-star" anvil:name="star1" aria-hidden="true">★</span>
+    <span class="rs-star" anvil:name="star2" aria-hidden="true">★</span>
+    <span class="rs-star" anvil:name="star3" aria-hidden="true">★</span>
+    <anvil-component type="Label" name="stars_sr" prop:role='["sr"]'></anvil-component>
+  </div>
+  <anvil-component type="Label" name="acc_label" prop:role='["rs-acc"]'></anvil-component>
+  <anvil-component type="Label" name="acc_note" prop:role='["rs-accnote"]'></anvil-component>
+  <div class="rs-row">
+    <div><span>Score</span><anvil-component type="Label" name="score_label" prop:role='["rs-num"]'></anvil-component></div>
+    <div anvil:name="combo_box"><span>Best combo</span><anvil-component type="Label" name="combo_label" prop:role='["rs-num"]'></anvil-component></div>
+    <div anvil:name="claimed_box"><span>Province</span><anvil-component type="Label" name="claimed_label" prop:role='["rs-num", "gold"]' prop:text="Claimed"></anvil-component></div>
+  </div>
+  <div class="rs-conq" anvil:name="conq_box">
+    <anvil-component type="Doremi_Road.Components.Art" name="conq_crest"></anvil-component>
+    <anvil-component type="Label" name="conq_title" prop:role='["rs-conq-title"]'></anvil-component>
+    <anvil-component type="Label" name="conq_text" prop:role='["rs-text"]'></anvil-component>
+  </div>
+  <anvil-component type="RepeatingPanel" name="gains_panel" prop:item_template="Doremi_Road.Items.GainRow" prop:role='["rs-gains"]'></anvil-component>
+  <anvil-component type="Label" name="board_label" prop:role='["rs-small"]'></anvil-component>
+  <div class="rs-btns">
+    <anvil-component type="Button" name="next_button" prop:role='["btn", "btn-primary", "btn-lg"]'></anvil-component>
+    <anvil-component type="Button" name="again_button" prop:text="Play again" prop:role='["btn", "btn-lg"]'></anvil-component>
+    <anvil-component type="Button" name="map_button" prop:text="Back to the map" prop:role='["btn", "btn-lg"]'></anvil-component>
+  </div>
+</div>

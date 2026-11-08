@@ -1,0 +1,42 @@
+<anvil-form layout="Doremi_Road.Layouts.Shell">
+  <anvil-block slot="content">
+    <div class="pr">
+      <div class="pr-top">
+        <div class="pr-chord">
+          <h1 class="pr-h">You are playing</h1>
+          <anvil-component type="Label" name="chord_label" prop:role='["pr-big"]' prop:text="–"></anvil-component>
+          <anvil-component type="Label" name="notes_label" prop:role='["pr-notes"]' prop:text="Play anything. Chords are named as you play them."></anvil-component>
+        </div>
+        <div class="pr-tools">
+          <label class="pr-field"><span>Show</span>
+            <anvil-component type="DropDown" name="show_drop"></anvil-component>
+          </label>
+          <label class="pr-field" anvil:name="key_field"><span>in</span>
+            <anvil-component type="DropDown" name="key_drop"></anvil-component>
+          </label>
+          <label class="pr-field" anvil:name="chord_field"><span>Chord</span>
+            <anvil-component type="TextBox" name="chord_box" prop:role='["pr-chordbox"]'></anvil-component>
+          </label>
+          <anvil-component type="Button" name="hear_button" prop:text="▶ Hear it" prop:role='["btn", "btn-sm"]'></anvil-component>
+          <label class="pr-field pr-metro"><span>Metronome</span>
+            <input type="range" min="40" max="200" step="1" anvil:dom-node="bpm" aria-label="Metronome tempo">
+            <anvil-component type="Label" name="bpm_label" prop:role='["pr-bpm"]'></anvil-component>
+          </label>
+          <anvil-component type="Button" name="metro_button" prop:text="Start" prop:role='["btn", "btn-sm"]'></anvil-component>
+        </div>
+      </div>
+      <div class="pr-kbwrap">
+        <div class="pr-info">
+          <anvil-component type="Label" name="info_label" prop:role='["pr-in"]'></anvil-component>
+          <span class="pr-oct">
+            <anvil-component type="Button" name="down_button" prop:text="◀" prop:role='["oct-btn"]' prop:tooltip="Lower octave"></anvil-component>
+            <anvil-component type="Label" name="range_label" prop:role='["pr-range"]'></anvil-component>
+            <anvil-component type="Button" name="up_button" prop:text="▶" prop:role='["oct-btn"]' prop:tooltip="Higher octave"></anvil-component>
+          </span>
+          <anvil-component type="Button" name="midi_button" prop:text="Connect MIDI" prop:role='["btn", "btn-ghost", "btn-sm"]'></anvil-component>
+        </div>
+        <anvil-component type="Doremi_Road.Components.Keys" name="keys" prop:role='["pr-kb"]'></anvil-component>
+      </div>
+    </div>
+  </anvil-block>
+</anvil-form>

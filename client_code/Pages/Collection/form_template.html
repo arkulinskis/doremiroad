@@ -1,0 +1,14 @@
+<anvil-form layout="Doremi_Road.Layouts.Shell">
+  <anvil-block slot="content">
+    <div class="g-page">
+      <anvil-component type="Label" name="title_label" prop:role='["page-title"]' prop:text="Collection"></anvil-component>
+      <p class="lede">Composer cards, territory crests and your record on the road.</p>
+      <div class="g-sec"><h2 class="sec-h">Composer cards</h2><anvil-component type="Label" name="cards_count" prop:role='["sec-count"]'></anvil-component></div>
+      <anvil-component type="RepeatingPanel" name="cards_panel" prop:item_template="Doremi_Road.Items.ComposerCard" prop:role='["cd-grid"]'></anvil-component>
+      <div class="g-sec"><h2 class="sec-h">Territory crests</h2><anvil-component type="Label" name="crests_count" prop:role='["sec-count"]'></anvil-component></div>
+      <anvil-component type="RepeatingPanel" name="crests_panel" prop:item_template="Doremi_Road.Items.CrestTile" prop:role='["cr-row"]'></anvil-component>
+      <div class="g-sec"><h2 class="sec-h">Your record</h2></div>
+      <anvil-component type="RepeatingPanel" name="stats_panel" prop:item_template="Doremi_Road.Items.StatTile" prop:role='["stat-grid"]'></anvil-component>
+    </div>
+  </anvil-block>
+</anvil-form>

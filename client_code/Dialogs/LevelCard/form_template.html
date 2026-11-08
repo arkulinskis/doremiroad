@@ -1,0 +1,28 @@
+<div class="ui dr lv-card">
+  <div class="lv-top">
+    <anvil-component type="Label" name="title_label" prop:role='["dlg-title"]'></anvil-component>
+    <anvil-component type="Label" name="where_label" prop:role='["lv-where"]'></anvil-component>
+    <anvil-component type="Label" name="intro_label" prop:role='["lv-intro"]'></anvil-component>
+  </div>
+  <anvil-component type="RepeatingPanel" name="steps_panel" prop:item_template="Doremi_Road.Items.StepChip" prop:role='["lv-steps"]'></anvil-component>
+  <div class="lv-grid">
+    <div class="lv-box">
+      <h3>Your best</h3>
+      <anvil-component type="Label" name="best_stars" prop:role='["lv-bigstars"]'></anvil-component>
+      <anvil-component type="Label" name="best_text" prop:role='["lv-small"]'></anvil-component>
+      <anvil-component type="Label" name="marks_text" prop:role='["lv-small"]'></anvil-component>
+    </div>
+    <div class="lv-box">
+      <h3>Rewards</h3>
+      <anvil-component type="RepeatingPanel" name="rewards_panel" prop:item_template="Doremi_Road.Items.RewardLine"></anvil-component>
+    </div>
+  </div>
+  <div class="lv-box">
+    <h3>Leaderboard</h3>
+    <anvil-component type="RepeatingPanel" name="board_panel" prop:item_template="Doremi_Road.Items.BoardRow" prop:role='["lv-board"]'></anvil-component>
+    <anvil-component type="Label" name="board_note" prop:role='["lv-small"]' prop:text="Loading…"></anvil-component>
+  </div>
+  <div class="lv-btns">
+    <anvil-component type="Button" name="play_button" prop:text="Play ▸" prop:role='["btn", "btn-primary", "btn-lg"]'></anvil-component>
+  </div>
+</div>

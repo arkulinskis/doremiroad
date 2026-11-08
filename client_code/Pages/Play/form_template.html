@@ -1,0 +1,13 @@
+<anvil-form layout="Doremi_Road.Layouts.Shell">
+  <anvil-block slot="content">
+    <div class="pl-page">
+      <h1 class="ui-sr">Playing a level</h1>
+      <anvil-component type="Doremi_Road.Components.Stage" name="stage"></anvil-component>
+      <div class="g-page pl-missing" anvil:name="missing_box">
+        <anvil-component type="Label" name="missing_title" prop:role='["page-title"]' prop:text="This level isn't on your road"></anvil-component>
+        <anvil-component type="Label" name="missing_text" prop:role='["lede"]' prop:text="It may have been moved or renamed, or it isn't open for you yet."></anvil-component>
+        <a class="ui-btn primary" href="#map">Back to the map</a>
+      </div>
+    </div>
+  </anvil-block>
+</anvil-form>

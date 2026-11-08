@@ -181,7 +181,7 @@ def save_territory(spec):
     _admin()
     name = (str(spec.get("name") or "").strip() or "New territory")[:40]
     color = str(spec.get("color") or "")
-    fields = {"name": name, "emoji": (str(spec.get("emoji") or "\U0001F3B5"))[:8], "blurb": str(spec.get("blurb") or "")[:240],
+    fields: dict = {"name": name, "emoji": (str(spec.get("emoji") or "\U0001F3B5"))[:8], "blurb": str(spec.get("blurb") or "")[:240],
               "color": color if re.match(r"^#[0-9a-fA-F]{6}$", color) else C.COLORS[0],
               "x": float(L._int(spec.get("x"), 3, 97, 50)), "y": float(L._int(spec.get("y"), 3, 97, 50)),
               "published": bool(spec.get("published", True))}
