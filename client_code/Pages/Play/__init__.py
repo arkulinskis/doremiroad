@@ -59,7 +59,7 @@ class Play(PlayTemplate):
         self.stage.destroy()
 
     def _on_key(self, event):
-        if event.key == "Escape" and not self._pause_open and self.stage.running() and not self.stage.is_over():
+        if getattr(event, "key", None) == "Escape" and not self._pause_open and self.stage.running() and not self.stage.is_over():
             self.stage_paused()
 
     def _on_visibility(self, event):

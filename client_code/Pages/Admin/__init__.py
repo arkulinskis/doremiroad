@@ -547,7 +547,7 @@ class Admin(AdminTemplate):
         self.pt_stage.destroy()
 
     def _on_key(self, event):
-        if (event.ctrlKey or event.metaKey) and str(event.key).lower() == "s" and self.A["tab"] == "levels" and self.A["cur"]:
+        if (getattr(event, "ctrlKey", False) or getattr(event, "metaKey", False)) and str(getattr(event, "key", None)).lower() == "s" and self.A["tab"] == "levels" and self.A["cur"]:
             event.preventDefault()
             self.save_button_click()
 

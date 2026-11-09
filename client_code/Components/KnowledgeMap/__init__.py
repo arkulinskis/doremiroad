@@ -34,7 +34,7 @@ class KnowledgeMap(KnowledgeMapTemplate):
             self.raise_event("pick", key=str(g.getAttribute("data-t")))
 
     def host_key(self, event):
-        if event.key == "Enter" or event.key == " ":
+        if getattr(event, "key", None) == "Enter" or getattr(event, "key", None) == " ":
             g = event.target.closest(".m-terr")
             if g:
                 event.preventDefault()

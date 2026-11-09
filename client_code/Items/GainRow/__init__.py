@@ -26,6 +26,6 @@ class GainRow(GainRowTemplate):
             self.parent.raise_event("x-open", what=self.item["open"])
 
     def box_key(self, event):
-        if self.item.get("open") and event.key in ("Enter", " "):
+        if self.item.get("open") and getattr(event, "key", None) in ("Enter", " "):
             event.preventDefault()
             self.parent.raise_event("x-open", what=self.item["open"])
