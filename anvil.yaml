@@ -239,7 +239,7 @@ metadata:
 name: Doremi Road
 native_deps:
   head_html: |
-    <script src="_/theme/legal-kit.js?v=1e51f6ccfd"></script>
+    <script src="_/theme/legal-kit.js?v=abfc19c985"></script>
 
     <!-- seo:start (APP_MAKER/seo: edit seo/apps/doremiroad.json and run seo.py, not here) -->
     <link rel="canonical" href="https://doremiroad.com/">
@@ -292,7 +292,7 @@ native_deps:
     <script src="_/theme/app-kit.js?v=6ece07d012"></script>
     <!-- Engines (JavaScript, drawn by the Python Forms through client_code/dr.py): background music, the DR core
          (sound + MIDI/keys/touch input), music theory, the art (map, crests, staves), the level engine, page helpers -->
-    <script src="_/theme/ark-music.js?v=884c4f647c"></script>
+    <script src="_/theme/ark-music.js?v=39180862e8"></script>
     <script src="_/theme/dr-core.js?v=40baeadb53"></script>
     <script src="_/theme/dr-music.js?v=9a7a4c982e"></script>
     <script src="_/theme/dr-art.js?v=494938195c"></script>
