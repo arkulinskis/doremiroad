@@ -232,10 +232,9 @@ db_schema:
     server: full
     title: Users
 metadata:
-  description: 'A piano-learning game: play notes, chords and progressions on a MIDI keyboard, computer keys or touch screen,
-    train your ear and conquer the Realm of Harmony.'
-  logo_img: asset:Gemini_Generated_Image_xjjsiuxjjsiuxjjs.jpg
-  title: 'Doremi Road: learn piano and music theory as a game'
+  description: "A piano-learning game: play notes, chords and progressions on a MIDI keyboard, computer keys or touch screen, train your ear and conquer the Realm of Harmony."
+  logo_img: "asset:Gemini_Generated_Image_xjjsiuxjjsiuxjjs.jpg"
+  title: "Doremi Road: learn piano and music theory as a game"
 name: Doremi Road
 native_deps:
   head_html: |
