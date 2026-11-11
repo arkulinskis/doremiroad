@@ -1,16 +1,15 @@
 ---
 custom_component: true
-properties: []
 events:
-  - name: pick
-    description: A territory on the map was clicked (or chosen with Enter)
-    parameters:
-      - name: key
-toolbox_item:
-  title: Knowledge map
-  group: Doremi Road
-help_text: |
+- description: A territory on the map was clicked (or chosen with Enter)
+  name: pick
+  parameters:
+  - name: key
+help_text: |-
   The Realm of Harmony as an SVG map (DR.Art.map): territories in their colours, the road, flags and crests.
   Call draw(journey, opts); clicking a territory raises pick(key).
+toolbox_item:
+  group: Doremi Road
+  title: Knowledge map
 ---
 <div class="m-mapbox"><div class="m-mapbox-in" anvil:dom-node="host" anvil:on-dom:click="self.host_click" anvil:on-dom:keydown="self.host_key"></div></div>

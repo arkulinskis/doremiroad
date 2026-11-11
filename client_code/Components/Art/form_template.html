@@ -1,18 +1,17 @@
 ---
 custom_component: true
+help_text: A picture drawn by Doremi Road's JavaScript art engine (a crest, a composer medallion, a shop preview).
 properties:
-  - name: content
-    type: string
-    default_value: ""
-    description: SVG or HTML drawn by the engines (dr.art_crest, dr.art_medallion, dr.shop_preview ...)
-  - name: label
-    type: string
-    default_value: ""
-    description: What the picture shows, for screen readers (empty = decoration)
+- default_value: ''
+  description: SVG or HTML drawn by the engines (dr.art_crest, dr.art_medallion, dr.shop_preview ...)
+  name: content
+  type: string
+- default_value: ''
+  description: What the picture shows, for screen readers (empty = decoration)
+  name: label
+  type: string
 toolbox_item:
-  title: Engine art
   group: Doremi Road
-help_text: |
-  A picture drawn by Doremi Road's JavaScript art engine (a crest, a composer medallion, a shop preview).
+  title: Engine art
 ---
 <div class="dr-art"><div class="dr-art-in" anvil:dom-node="host"></div></div>

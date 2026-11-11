@@ -1,23 +1,22 @@
 ---
 custom_component: true
-properties: []
 events:
-  - name: paused
-    description: The player pressed the pause button (or Escape, or left the tab)
-  - name: finished
-    description: The level ended with enough accuracy
-    parameters:
-      - name: result
-      - name: accuracy
-  - name: failed
-    description: The level ended below the pass mark, or the harmony meter emptied
-    parameters:
-      - name: info
-toolbox_item:
-  title: Level stage
-  group: Doremi Road
-help_text: |
+- description: The player pressed the pause button (or Escape, or left the tab)
+  name: paused
+- description: The level ended with enough accuracy
+  name: finished
+  parameters:
+  - name: result
+  - name: accuracy
+- description: The level ended below the pass mark, or the harmony meter emptied
+  name: failed
+  parameters:
+  - name: info
+help_text: |-
   Runs one level full-screen in the level engine (DR.Stage: every step type, scoring, the rush highway, the keyboard).
   start(level, options) begins it; pause(), resume(), destroy(). Results come back as events.
+toolbox_item:
+  group: Doremi Road
+  title: Level stage
 ---
 <div class="g-play"><div class="g-play-in" anvil:dom-node="host"></div></div>
