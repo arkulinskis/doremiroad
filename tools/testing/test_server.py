@@ -18,6 +18,8 @@ sys.path[:0] = [str(HERE / "mock"), str(tmp)]
 
 import anvil.server  # noqa: E402
 import anvil.users  # noqa: E402
+import anvil.secrets  # noqa: E402
+anvil.secrets.SECRETS["admin_emails"] = "admin@example.com"  # the App Secret, faked
 from anvil.tables import app_tables as T  # noqa: E402
 from app import Accounts, Admin, Catalog as C, Game as G, Levels as L, Music as M  # noqa: E402
 
@@ -227,7 +229,7 @@ except anvil.server.PermissionDenied:
     ok(True, "non-admin blocked from admin_state")
 
 # ---- admin
-admin = user("arkulinskis@gmail.com")
+admin = user("admin@example.com")
 anvil.users.CURRENT[0] = admin
 a = Admin.admin_state()
 ok(a["ok"] and len(a["territories"]) == 9 and all(not l["errors"] for t in a["territories"] for l in t["levels"]),
@@ -266,7 +268,7 @@ r = Admin.delete_level(spec["key"])
 ok(T.levels.get(key=spec["key"]) is None, "level deleted")
 r = Admin.list_players()
 ok(r["ok"] and len(r["players"]) == 2, "players listed")
-r = Admin.set_admin("arkulinskis@gmail.com", False)
+r = Admin.set_admin("admin@example.com", False)
 ok(not r["ok"], "can't remove your own admin rights")
 r = Admin.set_admin("ana@example.com", True)
 ok(r["ok"] and ana["is_admin"], "made ana an admin")

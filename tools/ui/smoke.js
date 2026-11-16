@@ -119,7 +119,7 @@
 
     // ---- admin (Game.ADMIN_EMAILS): sign up the first time, sign in after that
     const adminPw = 'Dr-smoke-adm-93Kx-7q';
-    if (!(await signUp('Admin Tester', 'arkulinskis@gmail.com', adminPw))) await signIn('arkulinskis@gmail.com', adminPw);
+    if (!(await signUp('Admin Tester', 'admin@example.com', adminPw))) await signIn('admin@example.com', adminPw);
     await open('#admin', /Pick a level/, () => ($$('.a-lv').length < 10 ? 'level list missing' : ''));
     $('.a-lv .anvil-role-a-lv-name').click();
     await until(() => $$('.a-step').length >= 1 && /Checks/.test($('.ui-main').innerText), 'a level in the editor', 15000);

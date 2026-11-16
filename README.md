@@ -48,7 +48,7 @@ Also: per-level leaderboards (signed-in players), a **Practice Room** that names
 
 Sign in with an admin account. **Levels**: every territory's levels, reorder (▲▼), create (＋), edit name/territory/intro/thresholds/codex pages/composer cards/trial flag, and the steps, each with its own fields and a live preview (resolved chords for numerals, note counts and length for rushes, ▶ to hear it). Live checks match the server's. **Playtest** runs the unsaved level in the real engine. A level with errors is saved as a draft. Built-in levels can be put back with "↺ Original"; "Restore missing built-in levels" re-adds deleted ones. Raw JSON editing is available. **Territories**: name, emoji, blurb, colour, map position (with a live map preview), order, publish. **Players**: progress overview and admin rights.
 
-**Admins.** `arkulinskis@gmail.com` becomes an admin the first time it signs in (`ADMIN_EMAILS` in `server_code/Game.py`). Tick `is_admin` in the users table, or use the Players tab, to add more.
+**Admins.** your admin email (App Secret `admin_emails`) becomes an admin the first time it signs in (`ADMIN_EMAILS` in `server_code/Game.py`). Tick `is_admin` in the users table, or use the Players tab, to add more.
 
 ## Project layout (native Anvil Forms since 2026-11-08, branch `forms`)
 
@@ -105,5 +105,5 @@ git push origin forms                            # the branch; master only after
 
 1. Open the app in the Anvil editor. It shows a **Schema Mismatch** alert: choose **"The schema of the source code is correct"** so Anvil creates the tables.
 2. Check the **Users** service is listed (the deploy adds it: email sign-in, sign-up allowed, no email confirmation).
-3. Run the app and create an account with **arkulinskis@gmail.com** soon: email confirmation is off, so whoever first registers that email gets admin.
+3. Run the app and create an account with **your admin email** (App Secret `admin_emails`) soon: email confirmation is off, so whoever first registers that email gets admin.
 4. Optional: turn on email confirmation in the Users service, and pick a nicer app URL under Publish.
