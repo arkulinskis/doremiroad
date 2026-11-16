@@ -190,7 +190,10 @@ db_schema:
     indexes: []
     server: full
     title: Users
-metadata: {description: 'A piano-learning game: play notes, chords and progressions on a MIDI keyboard, computer keys or touch screen, train your ear and conquer the Realm of Harmony.', logo_img: 'asset:Gemini_Generated_Image_xjjsiuxjjsiuxjjs.jpg', title: 'Doremi Road: learn piano and music theory as a game'}
+metadata:
+  description: "A piano-learning game: play notes, chords and progressions on a MIDI keyboard, computer keys or touch screen, train your ear and conquer the Realm of Harmony."
+  logo_img: "asset:Gemini_Generated_Image_xjjsiuxjjsiuxjjs.jpg"
+  title: "Doremi Road: learn piano and music theory as a game"
 name: Doremi Road
 native_deps:
   head_html: |
@@ -216,6 +219,16 @@ native_deps:
     <meta name="twitter:image" content="https://doremiroad.com/_/theme/og-image.png">
     <link rel="alternate" type="text/plain" title="Doremi Road for AI assistants" href="https://doremiroad.com/llms.txt">
     <script type="application/ld+json">{"@context": "https://schema.org", "@graph": [{"@type": "VideoGame", "@id": "https://doremiroad.com/#app", "name": "Doremi Road", "url": "https://doremiroad.com/", "description": "A piano-learning game: play notes, chords and progressions on a MIDI keyboard, computer keys or touch screen, train your ear and conquer the Realm of Harmony.", "image": "https://doremiroad.com/_/theme/og-image.png", "inLanguage": "en", "publisher": {"@id": "https://arkvital.com/#org"}, "keywords": "learn piano game, piano lessons online, MIDI keyboard game, music theory game, ear training, chord practice, learn chords piano, piano for beginners, rhythm game piano", "applicationCategory": "EducationalApplication", "operatingSystem": "Any (web browser)", "featureList": ["Lessons that light up the keys and the staff", "Notes, chords and progressions in every key", "Rush mode: notes and chords fall onto the keys in time", "Ear training: hear a note or chord and play or name it", "Works with a MIDI keyboard, computer keys, mouse or a touch-screen piano", "Stars and accuracy scores for every level"], "audience": {"@type": "Audience", "audienceType": "Beginner and improving piano players, kids and adults"}}, {"@type": "WebSite", "@id": "https://doremiroad.com/#site", "url": "https://doremiroad.com/", "name": "Doremi Road", "publisher": {"@id": "https://arkvital.com/#org"}}, {"@type": "Organization", "@id": "https://arkvital.com/#org", "name": "Arkvital", "url": "https://arkvital.com", "email": "arkvital@outlook.com", "address": {"@type": "PostalAddress", "addressLocality": "Montreal", "addressRegion": "QC", "addressCountry": "CA"}}]}</script>
+    <noscript><div class="seo-noscript">
+    <h1>Doremi Road: learn piano and music theory as a game</h1>
+    <p>A piano-learning game: play notes, chords and progressions on a MIDI keyboard, computer keys or touch screen, train your ear and conquer the Realm of Harmony.</p>
+    <p>Doremi Road is a piano-learning game. You travel a road across the Realm of Harmony, a map of musical knowledge: each territory teaches one part of music, and every level you clear claims one of its provinces in your banner colour.</p>
+    <p>Play with a MIDI keyboard (Chrome or Edge), the computer keyboard, the mouse or a touch-screen piano on a tablet or phone. Levels mix lessons, notes, chords, Roman-numeral progressions, a falling-notes rush mode, ear training and theory quizzes.</p>
+    <p>Who it's for: Beginner and improving piano players, kids and adults</p>
+    <h2>What it does</h2><ul><li>Lessons that light up the keys and the staff</li><li>Notes, chords and progressions in every key</li><li>Rush mode: notes and chords fall onto the keys in time</li><li>Ear training: hear a note or chord and play or name it</li><li>Works with a MIDI keyboard, computer keys, mouse or a touch-screen piano</li><li>Stars and accuracy scores for every level</li></ul>
+    <h2>Questions</h2><h3>Do I need a real piano?</h3><p>No. A MIDI keyboard works best (Web MIDI in Chrome or Edge), but you can also play with the computer keyboard, the mouse or the on-screen piano on a tablet or phone.</p><h3>What will I learn?</h3><p>Notes on the keys and the staff, intervals, chords and inversions, progressions from Roman numerals, rhythm and ear training.</p><h3>How is a level scored?</h3><p>Accuracy across the level: 60% clears it, 80% earns two stars and 95% earns three.</p>
+    <p><a href="https://doremiroad.com/about">About Doremi Road</a> &middot; <a href="https://doremiroad.com/llms.txt">Doremi Road for AI assistants</a> &middot; Made by <a href="https://arkvital.com">Arkvital</a>, Montreal, Canada. Doremi Road needs JavaScript in your browser.</p>
+    </div></noscript>
     <!-- seo:end -->
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <meta name="theme-color" content="#0c1020">
