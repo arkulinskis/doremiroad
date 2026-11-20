@@ -291,6 +291,8 @@ REWARDS = {
     "xp_first": 50, "xp_per_item": 5, "xp_star": 25, "xp_replay": 10, "xp_daily": 40,
     "ducats_first": 40, "ducats_star": 15, "ducats_replay": 5, "ducats_replay_star": 2,
     "daily_ducats": 30, "daily_streak_bonus": 10, "daily_streak_cap": 7, "daily_card_chance": 0.35,
+    # Song Shelf: the first clear of each mode of a song; a replay pays xp_replay / ducats_replay
+    "song_xp": {"learn": 10, "practice": 15, "perform": 25}, "song_ducats": {"learn": 5, "practice": 8, "perform": 12},
 }
 
 # ---------------------------------------------------------------- badges
@@ -328,6 +330,8 @@ BADGES = [
     {"key": "midi", "name": "Plugged In", "emoji": "\U0001F50C", "desc": "Finish a level on a MIDI keyboard.", "stat": "midi_runs", "at": 1},
     {"key": "stylist", "name": "Stylist", "emoji": "\U0001F3A8", "desc": "Buy something in the shop."},
     {"key": "virtuoso", "name": "Virtuoso", "emoji": "\U0001F3BB", "desc": "Reach the rank of Virtuoso."},
+    {"key": "caroler", "name": "Caroler", "emoji": "\U0001F384", "desc": "Perform 3 Christmas songs from the Song Shelf."},
+    {"key": "songbook", "name": "Songbook", "emoji": "\U0001F3B6", "desc": "Perform 10 songs from the Song Shelf."},
 ]
 BADGE_KEYS = {b["key"] for b in BADGES}
 

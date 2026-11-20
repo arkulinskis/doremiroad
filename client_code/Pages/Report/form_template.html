@@ -1,0 +1,46 @@
+<anvil-form layout="Doremi_Road.Layouts.Shell">
+  <anvil-block slot="content">
+    <div class="g-page rp-page">
+      <div class="rp-sheet" anvil:name="sheet">
+        <p class="rp-printhead">Doremi Road · weekly practice report</p>
+        <anvil-component type="Label" name="title_label" prop:role='["page-title"]' prop:text="My practice week"></anvil-component>
+        <anvil-component type="Label" name="range_label" prop:role='["lede"]'></anvil-component>
+        <section class="dr-card rp-chart">
+          <div class="rp-chart-head">
+            <h2 class="sec-h">Minutes each day</h2>
+            <anvil-component type="Label" name="total_label" prop:role='["rp-total"]'></anvil-component>
+          </div>
+          <anvil-component type="RepeatingPanel" name="days_panel" prop:item_template="Doremi_Road.Items.DayBar" prop:role='["db-row"]'></anvil-component>
+          <anvil-component type="Label" name="empty_label" prop:role='["rp-empty"]' prop:text="No playing time this week yet. Every minute you play, even a run that fails, shows up here."></anvil-component>
+        </section>
+        <anvil-component type="RepeatingPanel" name="stats_panel" prop:item_template="Doremi_Road.Items.StatTile" prop:role='["stat-grid"]'></anvil-component>
+        <section class="rp-sec" anvil:name="hw_box">
+          <h2 class="sec-h">Homework</h2>
+          <anvil-component type="Label" name="hw_label" prop:role='["rp-sub"]'></anvil-component>
+          <anvil-component type="RepeatingPanel" name="hw_panel" prop:item_template="Doremi_Road.Items.HwTask" prop:role='["hw-list"]'></anvil-component>
+        </section>
+        <section class="rp-sec" anvil:name="cleared_box">
+          <h2 class="sec-h">Cleared this week</h2>
+          <anvil-component type="RepeatingPanel" name="cleared_panel" prop:item_template="Doremi_Road.Items.RewardLine" prop:role='["rp-cleared"]'></anvil-component>
+        </section>
+        <div class="rp-sign" aria-hidden="true">
+          <span>Student: ______________________</span>
+          <span>Parent's initials: __________</span>
+        </div>
+        <anvil-component type="Label" name="note_label" prop:role='["rp-note"]'></anvil-component>
+      </div>
+      <div class="rp-actions" anvil:name="actions">
+        <anvil-component type="Button" name="send_button" prop:text="📤 Send to my teacher" prop:role='["btn", "btn-primary", "btn-lg"]'></anvil-component>
+        <anvil-component type="Button" name="print_button" prop:text="🖨 Print one page" prop:role='["btn", "btn-lg"]'></anvil-component>
+        <a class="ui-btn lg" anvil:dom-node="hw_link" href="#hw">📋 Homework</a>
+        <a class="ui-btn lg" anvil:dom-node="teacher_link" href="#teacher">Make homework</a>
+      </div>
+      <anvil-component type="Label" name="share_label" prop:role='["rp-share"]'></anvil-component>
+      <div class="hw-state" anvil:name="broken_box">
+        <h1 class="page-h">This link is broken</h1>
+        <p class="muted">Part of it may be missing: links sometimes get cut when they're copied. Ask for it to be sent again.</p>
+        <div class="hw-actions"><a class="ui-btn primary lg" href="#landing">Open Doremi Road</a></div>
+      </div>
+    </div>
+  </anvil-block>
+</anvil-form>

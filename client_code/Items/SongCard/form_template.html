@@ -1,0 +1,20 @@
+<div class="sg-wrap">
+  <article class="sg" anvil:name="card">
+    <div class="sg-top">
+      <div class="sg-txt">
+        <anvil-component type="Label" name="title_label" prop:role='["sg-title"]'></anvil-component>
+        <anvil-component type="Label" name="origin_label" prop:role='["sg-origin"]'></anvil-component>
+      </div>
+      <span class="sg-level" anvil:dom-node="level"></span>
+    </div>
+    <div class="sg-meta">
+      <span anvil:dom-node="meta"></span>
+      <button type="button" class="sg-hear" anvil:dom-node="hear">♪ Hear it</button>
+    </div>
+    <div class="sg-modes">
+      <a class="sg-mode" anvil:dom-node="m_learn" href="#songs"><span class="sg-ic" aria-hidden="true">🐢</span><b>Learn</b><small anvil:dom-node="s_learn"></small></a>
+      <a class="sg-mode" anvil:dom-node="m_practice" href="#songs"><span class="sg-ic" aria-hidden="true">🎯</span><b>Practice</b><small anvil:dom-node="s_practice"></small></a>
+      <a class="sg-mode" anvil:dom-node="m_perform" href="#songs"><span class="sg-ic" aria-hidden="true">⭐</span><b>Perform</b><small anvil:dom-node="s_perform"></small></a>
+    </div>
+  </article>
+</div>

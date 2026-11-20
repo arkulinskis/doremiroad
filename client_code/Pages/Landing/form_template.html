@@ -8,10 +8,12 @@
           <p class="g-tag">Learn the piano one milestone at a time. Read, hear and play your way across the Realm of Harmony.</p>
           <div class="g-title-btns">
             <anvil-component type="Button" name="begin_button" prop:text="Begin the journey" prop:role='["btn", "btn-primary", "btn-lg"]'></anvil-component>
+            <anvil-component type="Button" name="song_button" prop:text="🎵 Play a song now" prop:role='["btn", "btn-lg", "btn-song"]'></anvil-component>
             <anvil-component type="Button" name="continue_button" prop:text="Continue the journey" prop:role='["btn", "btn-primary", "btn-lg"]'></anvil-component>
             <anvil-component type="Button" name="signin_button" prop:text="Sign in" prop:role='["btn", "btn-lg"]'></anvil-component>
             <anvil-component type="Button" name="signout_button" prop:text="Sign out" prop:role='["btn", "btn-lg"]'></anvil-component>
           </div>
+          <anvil-component type="Link" name="hw_link" prop:role='["pill-link"]'></anvil-component>
           <div class="g-inputs">
             <anvil-component type="Label" name="midi_pill" prop:role='["pill", "pill-glass"]'></anvil-component>
             <anvil-component type="Button" name="midi_button" prop:text="🎹 Connect a MIDI keyboard" prop:role='["pill-btn"]'></anvil-component>
@@ -26,6 +28,7 @@
           <a href="#watch" anvil:on-dom:click="self.jump_click" data-to="watch">▶ Watch the trailer</a>
           <a href="#how" anvil:on-dom:click="self.jump_click" data-to="how">How to play</a>
           <a href="#auth/signup" anvil:name="signup_link">Create an account</a>
+          <a href="#teacher">Piano teacher? Send homework in one link</a>
           <a href="https://prepsto.com/#f/97wdde4" target="_blank" rel="noopener" data-prepsto-open>Submit feedback</a>
           <button type="button" data-lk-open="overview">Privacy &amp; Terms</button>
         </nav>
@@ -57,12 +60,15 @@
         <div class="ui-wrap ui-narrow">
           <h2 class="lp-h2">How to play</h2>
           <ul class="how">
+            <li><b>Songs from day one.</b> The Song Shelf has Christmas carols and favourites, open from the start: Learn them note by note (the glowing key waits for you), Practice at 70% speed, then Perform.</li>
             <li><b>Travel the road.</b> Each territory of the knowledge map teaches one part of music. Clear a level to claim one of its provinces; clear them all to conquer the territory and unlock the next.</li>
             <li><b>Play with anything.</b> The on-screen piano (on a tablet or phone, tap the keys and use several fingers for chords; in the Practice Room, ◀ ▶ change the octave), a MIDI keyboard (Chrome or Edge), your computer keyboard (<span class="kbd">Z</span>–<span class="kbd">M</span> and <span class="kbd">Q</span>–<span class="kbd">U</span> are two octaves, black keys on the row above, <span class="kbd">↑</span> <span class="kbd">↓</span> shift octave) or the mouse.</li>
             <li><b>Challenges.</b> Lessons teach; note and chord steps check you can find things; progressions use Roman numerals; rushes drop notes onto the keys in time; ear training asks what you hear; quizzes test the theory.</li>
             <li><b>Stars.</b> 60% accuracy clears a level, 80% earns two stars, 95% three. Three stars on some levels earn composer cards.</li>
-            <li><b>Collect.</b> Codex pages, 20 composer cards, territory crests, 32 badges, ranks from Novice to Legend, and keyboards, note trails and banners from the shop, paid in ducats.</li>
+            <li><b>Collect.</b> Codex pages, 20 composer cards, territory crests, 34 badges, ranks from Novice to Legend, and keyboards, note trails and banners from the shop, paid in ducats.</li>
             <li><b>Practise daily.</b> A fresh Daily Practice every day; keep a streak for bigger rewards. The Practice Room names any chord you play.</li>
+            <li><b>Too fast?</b> Any rush level can run at 75% or 50% speed: it still clears the level (with one star). Bluetooth speakers or a TV lagging? Settings, then Timing, then Calibrate.</li>
+            <li><b>Teachers.</b> <a href="#teacher">Make a homework link</a>: pick songs and levels, a weekly goal and a due date. The checklist ticks itself as your student plays, and they send their week back as a link. No accounts, nothing about students saved on our server.</li>
           </ul>
           <div class="lp-cta">
             <a class="ui-btn primary lg" href="#map">Open the map</a>

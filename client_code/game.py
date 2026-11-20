@@ -2,9 +2,11 @@
 
     game.ready()             the road has been loaded this visit
     game.ensure()            load it if needed (guest progress from this browser, or the account's); False = failed
-    game.act(name, *args)    a game action (finish_level, finish_daily, buy, equip): guests send their progress along
+    game.act(name, *args)    a game action (finish_level, finish_daily, finish_song, buy, equip): guests send their progress along
                              and the guest_* twin runs; returns the reply (with "report") or None after a toast
-    game.S                   {me, progress, status, journey, catalog, daily, today, guest, sel}
+    game.S                   {me, progress, status, journey, catalog, songs, daily, today, guest, sel}
+    game.song(key) / song_level(key, mode) / song_stars(key)    the Song Shelf (levels built by server_code/Songs.py)
+    game.log_practice(seconds, kind)   playing time no finished run reported (quiet; weekly report + homework)
     game.rec(key) / unlocked(key) / terr_state(t) / current_terr() / next_level(key) / find_level(key) ...
 The server checks every result; this file only mirrors what it sends.
 """
@@ -14,7 +16,11 @@ from . import dr, state
 
 GUEST_KEY = "dr.guest"  # the JavaScript version's browser key: guest progress carries over
 S: dict = {"me": None, "progress": None, "status": None, "journey": [], "catalog": None, "daily": None, "today": "",
-     "guest": True, "sel": None, "loaded": False}
+     "guest": True, "sel": None, "loaded": False, "songs": {"shelves": [], "songs": []}}
+SONG_MODES = ("learn", "practice", "perform")
+SONG_MODE_NAMES = {"learn": "Learn", "practice": "Practice", "perform": "Perform"}
+SONG_MODE_ICONS = {"learn": "🐢", "practice": "🎯", "perform": "⭐"}
+SONG_MODE_SUBS = {"learn": "note by note", "practice": "70% speed", "perform": "full speed"}
 C: dict = {"codex": {}, "composers": {}, "badges": {}, "shop": {}}
 
 
@@ -41,6 +47,8 @@ def apply(r):
         _set_catalog(r["catalog"])
     if r.get("journey") is not None:
         S["journey"] = r["journey"]
+    if r.get("songs") is not None:
+        S["songs"] = r["songs"]
     for k in ("me", "progress", "status", "daily", "today"):
         if k in r and r[k] is not None:
             S[k] = r[k]
@@ -108,6 +116,22 @@ def signed_in():
     if g:
         dr.store_del(GUEST_KEY)
     return True
+
+
+def log_practice(seconds, kind="run"):
+    """Playing time that no finished run reported (a failed or quit run, a Practice Room session). Quiet: no spinner,
+    no message if it fails (it's only the practice log)."""
+    if not S["loaded"] or seconds < (10 if kind == "run" else 30):
+        return
+    try:
+        if S["guest"]:
+            r = anvil.server.call_s("guest_log_practice", S["progress"], int(seconds), kind, dr.today())
+        else:
+            r = anvil.server.call_s("log_practice", int(seconds), kind, dr.today())
+    except Exception as e:
+        print("log_practice failed: %r" % e)
+        return
+    apply(r)
 
 
 def rename(name):
@@ -223,6 +247,28 @@ def step_icons(data):
         if ic and ic not in out:
             out.append(ic)
     return " ".join(out)
+
+
+# ---------------------------------------------------------------- the Song Shelf
+def song(key):
+    for s in S["songs"]["songs"]:
+        if s["key"] == key:
+            return s
+    return None
+
+
+def song_level(key, mode):
+    s = song(key)
+    return s["modes"].get(mode) if s else None
+
+
+def song_stars(key):
+    rec = (S["progress"].get("songs") or {}).get(key) or {}
+    return {m: int(rec.get(m) or 0) for m in SONG_MODES}
+
+
+def songs_performed():
+    return [k for k, v in (S["progress"].get("songs") or {}).items() if (v or {}).get("perform")]
 
 
 def rank_line():

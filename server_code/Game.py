@@ -14,6 +14,7 @@ from anvil.tables import app_tables
 
 from . import Catalog as C
 from . import Levels as L
+from . import Songs as SG
 from . import AdminAccess
 
 # Accounts with these emails become admins the first time they sign in (users.is_admin can also be ticked by hand).
@@ -21,6 +22,15 @@ ADMIN_EMAILS = AdminAccess.ADMIN_EMAILS  # from the App Secret `admin_emails`
 
 STAT_KEYS = ("notes", "chords", "ear", "quiz", "perfects", "runs", "flawless", "max_combo", "midi_runs", "dailies",
              "xp_earned", "ducats_earned")
+
+# The practice log (progress["log"]): {"YYYY-MM-DD": {"s": seconds played, "r": runs, "c": [up to 12 things cleared]}}
+# for the weekly report and the homework checklist. Cleared keys: "l:<level>", "d" (daily), "s:<song>:<mode>".
+LOG_DAYS = 60            # newest days kept
+LOG_DAY_CAP = 4 * 3600   # seconds counted per day
+LOG_RUN_CAP = 1200       # seconds one finished run can add
+LOG_CALL_CAP = 1800      # seconds one log_practice call can add
+LOG_KEYS_PER_DAY = 12
+DATE_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 
 
 def _now():
@@ -102,7 +112,7 @@ def _public_journey(jr):
 def new_progress():
     return {"v": 1, "xp": 0, "ducats": 0, "levels": {}, "codex": [], "cards": {}, "badges": {},
             "stats": {k: 0 for k in STAT_KEYS}, "daily": {"last": None, "streak": 0, "best": 0},
-            "owned": {kind: [C.DEFAULTS[kind]] for kind in C.SHOP}, "equip": dict(C.DEFAULTS)}
+            "owned": {kind: [C.DEFAULTS[kind]] for kind in C.SHOP}, "equip": dict(C.DEFAULTS), "songs": {}, "log": {}}
 
 
 def _int(v, lo=0, hi=10 ** 7):
@@ -153,7 +163,49 @@ def normalize(p):
         base["owned"][kind] = [C.DEFAULTS[kind]] + [x for x in dict.fromkeys(keys) if x != C.DEFAULTS[kind]]
         e = (p.get("equip") or {}).get(kind)
         base["equip"][kind] = e if e in base["owned"][kind] else C.DEFAULTS[kind]
+    songs = p.get("songs") if isinstance(p.get("songs"), dict) else {}
+    for k, v in songs.items():
+        if k in SG.SONG_BY_KEY and isinstance(v, dict):
+            rec = {m: _int(v.get(m), 0, 3) for m in SG.MODES if _int(v.get(m), 0, 3) > 0}
+            if rec:
+                base["songs"][k] = rec
+    base["log"] = _clean_log(p.get("log"))
     return base
+
+
+def _valid_day(k):
+    if not (isinstance(k, str) and DATE_RE.match(k)):
+        return False
+    try:
+        dt.date(int(k[:4]), int(k[5:7]), int(k[8:10]))
+        return True
+    except Exception:
+        return False
+
+
+def _clean_log(log):
+    """Only real dates, capped numbers, short key lists; the newest LOG_DAYS days."""
+    log = log if isinstance(log, dict) else {}
+    out = {}
+    for k in sorted([k for k in log if _valid_day(k) and isinstance(log[k], dict)], reverse=True)[:LOG_DAYS]:
+        v = log[k]
+        keys = v.get("c") if isinstance(v.get("c"), list) else []
+        keys = [x for x in dict.fromkeys(keys) if isinstance(x, str) and 0 < len(x) <= 80][:LOG_KEYS_PER_DAY]
+        out[k] = {"s": _int(v.get("s"), 0, LOG_DAY_CAP), "r": _int(v.get("r"), 0, 500), "c": keys}
+    return out
+
+
+def _log(p, today, seconds, run=True, key=None):
+    """Add playing time (and a run, and what was cleared) to today's line of the practice log."""
+    d = today.isoformat()
+    day = p["log"].get(d) or {"s": 0, "r": 0, "c": []}
+    day["s"] = min(LOG_DAY_CAP, day["s"] + int(round(max(0.0, float(seconds)))))
+    if run:
+        day["r"] = min(500, day["r"] + 1)
+    if key and key not in day["c"] and len(day["c"]) < LOG_KEYS_PER_DAY:
+        day["c"].append(key)
+    p["log"][d] = day
+    p["log"] = _clean_log(p["log"])
 
 
 def rank_of(xp):
@@ -196,6 +248,7 @@ def status(p, jr):
 def check_badges(p, jr, today):
     st = status(p, jr)
     have = p["badges"]
+    performed = [k for k, v in p["songs"].items() if k in SG.SONG_BY_KEY and v.get("perform", 0) >= 1]
     tests = {
         "first_note": len(st["cleared"]) >= 1,
         "road_10": len(st["cleared"]) >= 10,
@@ -216,6 +269,8 @@ def check_badges(p, jr, today):
         "daily_30": p["daily"]["best"] >= 30,
         "stylist": any(len(v) > 1 for v in p["owned"].values()),
         "virtuoso": st["rank"]["idx"] >= 6,
+        "caroler": len([k for k in performed if SG.SONG_BY_KEY[k]["shelf"] == "christmas"]) >= 3,
+        "songbook": len(performed) >= 10,
     }
     new = []
     for b in C.BADGES:
@@ -235,7 +290,7 @@ def view(p, jr, today, me, full=True):
     out = {"me": me, "progress": p, "status": st, "today": today.isoformat(),
            "daily": {"level": dl, "done": p["daily"]["last"] == today.isoformat(), "streak": p["daily"]["streak"]}}
     if full:
-        out.update(journey=_public_journey(jr), catalog=C.public())
+        out.update(journey=_public_journey(jr), catalog=C.public(), songs=SG.public())
     return out
 
 
@@ -265,6 +320,8 @@ def _score_run(data, result):
         "quiz": _int(result.get("quiz"), 0, tot["quiz"]),
         "time": _num(result.get("time"), 1, 24 * 3600),
         "midi": bool(result.get("midi")),
+        # Slow it down: rush steps played at 50-100% of their tempo (the item count doesn't change)
+        "speed": round(_num(result.get("speed") if result.get("speed") is not None else 1, 0.5, 1), 2),
     }
     return acc, clean
 
@@ -312,17 +369,20 @@ def apply_finish(p, lv, jr, result, today):
     need = _int(data.get("pass"), 0, 100) if data.get("pass") is not None else L.DEFAULT_PASS
     if acc < need:
         raise GameError("You need %d%% accuracy to clear this level." % need)
-    stars = _stars(data, acc)
+    slow = clean["speed"] < 1
+    stars = min(1, _stars(data, acc)) if slow else _stars(data, acc)  # a slowed run clears with one star at most
     rec = p["levels"].get(key) or {"stars": 0, "best": 0.0, "score": 0, "clears": 0, "c1": False, "c3": False}
     first_clear = rec["stars"] == 0
     new_stars = max(0, stars - rec["stars"])
-    new_best = acc > rec["best"]
-    new_hi = clean["score"] > rec["score"]
-    rec.update(stars=max(rec["stars"], stars), best=max(rec["best"], acc), score=max(rec["score"], clean["score"]),
-               clears=rec["clears"] + 1)
+    new_best = acc > rec["best"] and not slow
+    new_hi = clean["score"] > rec["score"] and not slow
+    rec.update(stars=max(rec["stars"], stars), clears=rec["clears"] + 1)
+    if not slow:  # best accuracy and high score only count at full speed
+        rec.update(best=max(rec["best"], acc), score=max(rec["score"], clean["score"]))
     report = {"level": key, "accuracy": acc, "stars": stars, "new_stars": new_stars, "first_clear": first_clear,
               "best": rec["best"], "new_best": new_best and not first_clear, "score": clean["score"],
-              "high_score": rec["score"], "new_high": new_hi and not first_clear, "combo": clean["combo"]}
+              "high_score": rec["score"], "new_high": new_hi and not first_clear, "combo": clean["combo"],
+              "slow": slow, "speed": clean["speed"]}
     # Cards: once per level each.
     cards = data.get("cards") or {}
     if cards.get("clear") and not rec["c1"]:
@@ -354,6 +414,7 @@ def apply_finish(p, lv, jr, result, today):
     p["stats"]["xp_earned"] += xp
     p["stats"]["ducats_earned"] += ducats
     _add_stats(p, clean)
+    _log(p, today, min(clean["time"], LOG_RUN_CAP), True, "l:" + key)
     after = status(p, jr)
     terr = next((t for t in jr if any(l["key"] == key for l in t["levels"])), None)
     report.update(
@@ -375,6 +436,7 @@ def apply_daily(p, jr, today, result):
     if acc < dl["data"]["pass"]:
         raise GameError("You need %d%% accuracy to complete the daily practice." % dl["data"]["pass"])
     _add_stats(p, clean)
+    _log(p, today, min(clean["time"], LOG_RUN_CAP), True, "d")
     d = p["daily"]
     report = {"daily": True, "accuracy": acc, "stars": _stars(dl["data"], acc), "score": clean["score"],
               "combo": clean["combo"], "xp": 0, "ducats": 0, "xp_parts": [], "ducat_parts": [], "codex": [],
@@ -406,6 +468,54 @@ def apply_daily(p, jr, today, result):
         report["rank_up"] = rank_of(p["xp"])["name"]
     report["new_badges"] = check_badges(p, jr, today)
     return p, report
+
+
+def apply_song(p, key, mode, jr, result, today):
+    """A Song Shelf run (learn / practice / perform). Stars per mode; the first clear of a mode pays song_xp and
+    song_ducats, a replay pays the practice reward. No leaderboard."""
+    lv = SG.level(key, mode)
+    if lv is None:
+        raise GameError("That song isn't on the shelf.")
+    data = lv["data"]
+    acc, clean = _score_run(data, result)
+    if acc < data["pass"]:
+        raise GameError("You need %d%% accuracy to clear this song." % data["pass"])
+    stars = min(1, _stars(data, acc)) if clean["speed"] < 1 else _stars(data, acc)
+    rec = dict(p["songs"].get(key) or {})
+    old = rec.get(mode, 0)
+    first_clear = old == 0
+    rec[mode] = max(old, stars)
+    p["songs"][key] = rec
+    R = C.REWARDS
+    label = SG.MODE_NAMES[mode]
+    if first_clear:
+        xp, ducats = R["song_xp"][mode], R["song_ducats"][mode]
+        xp_parts, d_parts = [["First clear · " + label, xp]], [["First clear · " + label, ducats]]
+    else:
+        xp, ducats = R["xp_replay"], R["ducats_replay"]
+        xp_parts, d_parts = [["Practice", xp]], [["Practice", ducats]]
+    rank_before = rank_of(p["xp"])["idx"]
+    p["xp"] += xp
+    p["ducats"] += ducats
+    p["stats"]["xp_earned"] += xp
+    p["stats"]["ducats_earned"] += ducats
+    _add_stats(p, clean)
+    _log(p, today, min(clean["time"], LOG_RUN_CAP), True, "s:%s:%s" % (key, mode))
+    report = {"song": key, "mode": mode, "accuracy": acc, "stars": stars, "best_stars": rec[mode],
+              "new_stars": max(0, stars - old), "first_clear": first_clear, "score": clean["score"],
+              "combo": clean["combo"], "xp": xp, "ducats": ducats, "xp_parts": xp_parts, "ducat_parts": d_parts,
+              "codex": [], "unlocked": [], "conquered": None, "mastered": None,
+              "rank_up": rank_of(p["xp"])["name"] if rank_of(p["xp"])["idx"] > rank_before else None,
+              "new_badges": check_badges(p, jr, today)}
+    return p, report
+
+
+def apply_log(p, seconds, kind, today):
+    """Playing time that no finished run reported: failed or quit runs ("run"), Practice Room sessions ("room")."""
+    secs = _num(seconds, 0, LOG_CALL_CAP)
+    if secs >= 1:
+        _log(p, today, secs, run=(kind == "run"))
+    return p, {"logged": int(secs)}
 
 
 def apply_buy(p, kind, key, jr, today):
@@ -518,8 +628,11 @@ def finish_level(level_key, result, today=None):
         p, report = apply_finish(p, lv, jr, result, t)
         row = lv["_row"]
         row["clears"] = (row["clears"] or 0) + 1
-        _save_score(u, row, report["score"], report["accuracy"], p["levels"][level_key]["stars"])
-        report["leaderboard"] = _board(row, u)
+        if report["slow"]:
+            report["leaderboard"] = None  # leaderboards hold full-speed runs only
+        else:
+            _save_score(u, row, report["score"], report["accuracy"], p["levels"][level_key]["stars"])
+            report["leaderboard"] = _board(row, u)
         return p, report
     return _user_action(today, fn)
 
@@ -527,6 +640,16 @@ def finish_level(level_key, result, today=None):
 @anvil.server.callable
 def finish_daily(result, today=None):
     return _user_action(today, lambda p, jr, t: apply_daily(p, jr, t, result))
+
+
+@anvil.server.callable
+def finish_song(key, mode, result, today=None):
+    return _user_action(today, lambda p, jr, t: apply_song(p, key, mode, jr, result, t))
+
+
+@anvil.server.callable
+def log_practice(seconds, kind="run", today=None):
+    return _user_action(today, lambda p, jr, t: apply_log(p, seconds, kind, t))
 
 
 @anvil.server.callable
@@ -629,9 +752,19 @@ def guest_finish_level(progress, level_key, result, today=None):
     def fn(p, jr, t):
         lv = _level_row(level_key, jr)
         p, report = apply_finish(p, lv, jr, result, t)
-        report["leaderboard"] = _board(lv["_row"], None)
+        report["leaderboard"] = None if report["slow"] else _board(lv["_row"], None)
         return p, report
     return _guest(progress, today, fn)
+
+
+@anvil.server.callable
+def guest_finish_song(progress, key, mode, result, today=None):
+    return _guest(progress, today, lambda p, jr, t: apply_song(p, key, mode, jr, result, t))
+
+
+@anvil.server.callable
+def guest_log_practice(progress, seconds, kind="run", today=None):
+    return _guest(progress, today, lambda p, jr, t: apply_log(p, seconds, kind, t))
 
 
 @anvil.server.callable

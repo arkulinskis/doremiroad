@@ -35,10 +35,26 @@ Accuracy across the level decides the result: 60% clears, 80% two stars, 95% thr
 2. **Codex**: 42 theory pages, each unlocked by the level that teaches it, with an example you can hear.
 3. **Composer cards**: 20 (common → legendary), from first clears and three-star clears of certain levels, and as daily-practice drops. Duplicates sell for ducats.
 4. **Territory crests**.
-5. **32 badges**.
+5. **34 badges** (Caroler and Songbook come from the Song Shelf).
 6. **Stars** (3 per level) and **ranks** by XP: Novice → Busker → Apprentice → Chorister → Accompanist → Soloist → Virtuoso → Maestro → Legend.
 7. **Shop** (paid in ducats): 7 keyboard skins, 5 note trails for rushes, 7 map banners.
 8. **Daily Practice**: a new generated level every day (harder as you conquer more), streak bonus, card chance.
+
+## Song Shelf (`#songs`)
+
+17 public-domain songs on two shelves, open to everyone from the first minute (guests too): **Christmas** (Jingle Bells, We Wish You a Merry Christmas, Deck the Halls, O Christmas Tree, Silent Night, Joy to the World) and **Favourites** (Twinkle, Mary Had a Little Lamb, London Bridge, Ode to Joy, Row Your Boat, Happy Birthday, When the Saints, Amazing Grace, Can-Can, Für Elise, Minuet in G). Every song plays three ways, each with its own stars: **🐢 Learn** (phrase by phrase, the glowing key waits for you), **🎯 Practice** (falling notes at 70% speed, with names) and **⭐ Perform** (full tempo). "♪ Hear it" plays the opening. The first clear of each mode pays XP and ducats. The title screen has "🎄 Play Jingle Bells now" from 15 Nov to 10 Jan ("🎵 Play a song now" the rest of the year). Melodies live in `server_code/Songs.py`, written out by hand, melody only.
+
+## Too fast? Too laggy?
+
+- **Slow it down:** the level card of any level with a rush has a 100% / 75% / 50% speed choice, and a failed rush offers "🐢 Try at 75% speed" (then 50%). A slowed run clears the level and opens the next one, with one star at most and no leaderboard score. On the Song Shelf, a failed Perform offers Practice and a failed Practice offers Learn.
+- **Timing:** Settings → Timing (−/+ 10 ms, 0 to 300 ms) and **Calibrate**: tap with the beat as dots land on a line; the median lateness is taken off every rush press (Bluetooth speakers and TVs lag).
+
+## Homework links and the weekly report (no accounts)
+
+- **Teachers** (`#teacher`): pick up to 6 tasks (a song and how to play it, a road level, Daily Practice), a weekly goal ("15 minutes on 5 days"), a due date and a note, and get a link to copy or share.
+- **Students** open `#hw/<code>`: "Homework from Ms Lee", a checklist that ticks itself from real play (the practice log), Play buttons, and a Homework tab with a dot in the header until it's all done. Kept only in that browser.
+- **My practice week** (`#report`): minutes per day for the last 7 days (CSS bars), runs, levels and songs cleared, streak, stars, territory and the homework ticks. **Send to my teacher** shares it as a link (`#r/<code>`, read-only for the teacher); **Print** gives one page with a line for a parent's initials.
+- Nothing about students is stored on the server: homework and reports travel inside their links (base64url JSON). The player's progress keeps a practice log (`progress.log`: seconds, runs and what was cleared per day, newest 60 days) that finished runs, failed or quit runs and Practice Room sessions over 30 s add to.
 
 Also: per-level leaderboards (signed-in players), a **Practice Room** that names any chord you play and can light up any scale or chord, with a metronome, and settings for sounds, key labels and MIDI.
 
@@ -54,18 +70,21 @@ Sign in with an admin account. **Levels**: every territory's levels, reorder (�
 
 ```
 anvil.yaml              startup module, db_schema (unchanged), services, head_html (SEO, fonts, Prepsto, theme assets)
-client_code/            startup.py, router.py (addresses: "" / #landing, #map, #codex, #collection, #practice, #badges,
-                        #shop, #play/<level>|daily, #auth, #admin), state.py, auth.py, legal.py (kit),
-                        game.py (the player's state + lookups), dr.py (the bridge to the JavaScript engines)
+client_code/            startup.py, router.py (addresses: "" / #landing, #map, #songs, #codex, #collection, #practice,
+                        #badges, #shop, #play/<level>[/75|50] | daily | song/<key>/<mode>, #teacher, #hw/<code>,
+                        #report, #r/<code>, #auth, #admin), state.py, auth.py, legal.py (kit), game.py (the player's
+                        state + lookups), dr.py (the bridge to the JavaScript engines), homework.py (homework + report codes)
   Layouts/Shell         the hub bar (tabs, rank, ducats, streak, profile button) + footer
-  Pages/                Landing (title + Watch + How to play), Map, Codex, Collection, Practice, Badges, Shop, Play,
-                        Auth, Admin (level editor: Levels / Territories / Players)
+  Pages/                Landing (title + Watch + How to play), Map, Songs, Codex, Collection, Practice, Badges, Shop,
+                        Play, Teacher, Homework, Report, Auth, Admin (level editor: Levels / Territories / Players)
   Components/           Stage (the level engine), KnowledgeMap, TitleScene, Keys (on-screen piano), Art (SVG), SettingsPanel
   Items/                RepeatingPanel rows (levels, codex tiles, cards, badges, shop items, editor steps ...)
-  Dialogs/              LevelCard, DailyCard, Pause, Fail, Results, CodexPage, ComposerView, Settings, Profile, LevelJson
+  Dialogs/              LevelCard, DailyCard, Pause, Fail, Results, CodexPage, ComposerView, Settings, Profile, LevelJson,
+                        Calibrate
 theme/assets/           dr-core.js (sound + MIDI/keys/touch input), dr-music.js, dr-art.js, dr-engine.js (unchanged
                         engines), dr-ui.js (practice room, shop previews, editor checks), ark-music.js, app.css, app-kit.js
-server_code/            Music, Catalog, Levels, Game, Admin (unchanged), Accounts (get_me), legal_server, seo_routes, SchemaCheck
+server_code/            Music, Catalog, Levels, Songs (the Song Shelf), Game, Admin, Accounts (get_me), legal_server, seo_routes,
+                        SchemaCheck
 tools/                  check.py, ui_test.py + ui/smoke.js, testing/ (server tests), assets.py, icons
 ```
 
@@ -84,9 +103,9 @@ What this project uses besides its own code. Generated by `APP_MAKER/tools/libra
 | [YouTube embeds](https://developers.google.com/youtube/player_parameters) | Outside web service | Plays a YouTube video inside the page (the privacy-friendlier youtube-nocookie address). |
 | [Google Fonts](https://fonts.google.com) | Loaded from a CDN | Cinzel, Cormorant Garamond, Inter, Noto Music |
 
-**Built into the browser:** Canvas 2D, Web Audio API, localStorage.
+**Built into the browser:** Canvas 2D, Web Audio API, Web Share, localStorage, Clipboard.
 
-**Anvil platform:** Anvil, Anvil Data Tables, Anvil JS bridge (anvil.js), Anvil Users, Anvil Google service.
+**Anvil platform:** Anvil, Anvil Data Tables, Anvil Email, Anvil JS bridge (anvil.js), Anvil Secrets, Anvil Users, Anvil Google service.
 
 **Build and test tools (not shipped):** axe-core, Node.js, Headless Chrome (DevTools Protocol), PyYAML.
 

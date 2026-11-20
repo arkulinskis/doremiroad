@@ -46,6 +46,97 @@
     };
   };
 
+  /* ---------- timing calibration (Settings > Timing > Calibrate) ----------
+     Dots fall onto a line in time with clicks: 4 count-in beats, then 8 beats to tap on (any key, a MIDI key, or the
+     pad). The median lateness of the taps, 0-300 ms, is the latency the rush engine takes off every press.
+     UI.calibrate(el, {onTap(n, of), onDone(ms or null, taps)}) -> {stop, tap, state} */
+  UI.calibrate = function (el, o) {
+    o = o || {};
+    var LEAD = 4, N = 8, BPM = 92, spb = 60 / BPM;
+    el.innerHTML = '<canvas class="cal-cv" aria-hidden="true"></canvas>';
+    var cv = el.querySelector('canvas'), ctx = cv.getContext('2d');
+    var actx = DR.Sound.init(), live = actx && actx.state === 'running';
+    function clock() { return live ? actx.currentTime : performance.now() / 1000; }
+    var t0 = clock() + 0.9, beats = [], i;
+    for (i = 0; i < LEAD + N; i++) beats.push(t0 + i * spb);
+    var taps = {}, flashes = [], alive = true, done = false, timers = [];
+    beats.forEach(function (bt, j) {
+      if (live) DR.Sound.click(bt);
+      else timers.push(setTimeout(function () { DR.Sound.click(); }, Math.max(0, (bt - clock()) * 1000)));
+    });
+    function count() { return Object.keys(taps).length; }
+    function tap() {
+      if (!alive || done) return;
+      var t = clock(), best = -1, bd = 1e9;
+      for (var k = LEAD; k < beats.length; k++) { var d = t - beats[k]; if (Math.abs(d) < bd) { bd = Math.abs(d); best = k; } }
+      flashes.push(t);
+      if (best < 0 || bd > spb / 2 || taps[best] != null) return;
+      taps[best] = t - beats[best];
+      if (o.onTap) o.onTap(count(), N);
+    }
+    function finish() {
+      if (done) return;
+      done = true;
+      var ds = Object.keys(taps).map(function (k) { return taps[k]; }).sort(function (a, b) { return a - b; });
+      var ms = null;
+      if (ds.length >= 4) {
+        var mid = ds.length >> 1, med = ds.length % 2 ? ds[mid] : (ds[mid - 1] + ds[mid]) / 2;
+        ms = Math.max(0, Math.min(300, Math.round(med * 1000 / 5) * 5));
+      }
+      if (o.onDone) o.onDone(ms, ds.length);
+    }
+    function onKey(e) {
+      if (done || !alive || e.repeat || e.ctrlKey || e.metaKey || e.altKey || ['Tab', 'Escape', 'Shift', 'Control', 'Alt', 'Meta'].indexOf(e.key) >= 0) return;
+      e.preventDefault();
+      tap();
+    }
+    function onDown(e) { if (done || !alive) return; e.preventDefault(); tap(); }
+    var offIn = DR.Input.on(function (type, m, vel, src) { if (type === 'on' && src === 'midi') tap(); });
+    window.addEventListener('keydown', onKey, true);
+    el.addEventListener('pointerdown', onDown);
+    function draw() {
+      if (!alive) return;
+      var w = cv.clientWidth, h = cv.clientHeight, dpr = Math.min(2, window.devicePixelRatio || 1);
+      if (cv.width !== Math.round(w * dpr) || cv.height !== Math.round(h * dpr)) { cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr); }
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      ctx.clearRect(0, 0, w, h);
+      var t = clock(), line = h - 26, speed = (h - 50) / (spb * 2.2);
+      ctx.fillStyle = 'rgba(226,178,90,.22)'; ctx.fillRect(0, line - 10, w, 20);
+      ctx.fillStyle = '#e2b25a'; ctx.fillRect(0, line - 1, w, 2);
+      beats.forEach(function (bt, k) {
+        var y = line - (bt - t) * speed;
+        if (y < -20 || y > h + 20) return;
+        var lead = k < LEAD, hit = taps[k] != null, past = t > bt + 0.15;
+        ctx.globalAlpha = past ? Math.max(0, 1 - (t - bt - 0.15) / 0.4) : 1;
+        ctx.beginPath(); ctx.arc(w / 2, Math.min(y, line), lead ? 9 : 13, 0, Math.PI * 2);
+        ctx.fillStyle = lead ? '#8b93b8' : hit ? '#7fd6a6' : '#f4d58f';
+        ctx.fill();
+        ctx.globalAlpha = 1;
+      });
+      flashes = flashes.filter(function (ft) { return t - ft < 0.3; });
+      flashes.forEach(function (ft) {
+        ctx.globalAlpha = 1 - (t - ft) / 0.3;
+        ctx.strokeStyle = '#f0e7d3'; ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.arc(w / 2, line, 22 + (t - ft) * 60, 0, Math.PI * 2); ctx.stroke();
+        ctx.globalAlpha = 1;
+      });
+      ctx.font = '600 13px Inter, sans-serif'; ctx.textAlign = 'center'; ctx.fillStyle = '#c4bba6';
+      var next = beats.filter(function (bt) { return bt > t; }).length;
+      ctx.fillText(t < beats[LEAD] - spb / 2 ? 'Get ready: ' + Math.max(1, Math.ceil((beats[LEAD] - t) / spb)) : next ? 'Tap as each dot lands' : '', w / 2, 20);
+      if (!done && t > beats[beats.length - 1] + 0.6) finish();
+      if (!done || flashes.length || t < beats[beats.length - 1] + 1.2) requestAnimationFrame(draw);
+    }
+    requestAnimationFrame(draw);
+    function stop() {
+      alive = false;
+      timers.forEach(clearTimeout);
+      offIn();
+      window.removeEventListener('keydown', onKey, true);
+      el.removeEventListener('pointerdown', onDown);
+    }
+    return { stop: stop, tap: tap, state: function () { return { beats: beats, lead: LEAD, now: clock(), taps: count(), done: done }; } };
+  };
+
   /* ---------- the Practice Room: keyboard + chord naming + scales + metronome ----------
      UI.practice(el, ps, hooks) -> {set(key, value), hear(), metro() -> running?, oct(+1|-1), midi(), destroy()}
      ps = {show, key, chord, bpm, lo}; hooks (Python functions): chord(big, small), info(text, showMidiLink),

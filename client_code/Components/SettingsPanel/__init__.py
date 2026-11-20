@@ -21,6 +21,9 @@ class SettingsPanel(SettingsPanelTemplate):
             state.set_control_attr(box, "aria-label", caption)
             state.set_control_attr(box, "role", "switch")
             box.add_event_handler("change", self._make_toggle(box, key))
+        state.set_control_attr(self.lat_down, "aria-label", "Timing 10 milliseconds earlier")
+        state.set_control_attr(self.lat_up, "aria-label", "Timing 10 milliseconds later")
+        state.live(self.lat_label)
         vol = self.dom_nodes["volume"]
         vol.addEventListener("input", anvil.js.report_exceptions(self._volume))
         self._draw()
@@ -45,6 +48,10 @@ class SettingsPanel(SettingsPanelTemplate):
         for v, el in (("none", self.labels_none), ("c", self.labels_c), ("all", self.labels_all)):
             el.classes["on"] = s.get("labels", "c") == v
         window.Object.assign(self.dom_nodes["volume"], {"value": str(s.get("volume", 0.8))})
+        lat = self._latency()
+        self.lat_label.text = "%d ms" % lat
+        self.lat_down.enabled = lat > 0
+        self.lat_up.enabled = lat < 300
         m = dr.midi()
         st = m["status"]
         self.midi_label.text = {"on": ", ".join(m["inputs"]),
@@ -66,6 +73,33 @@ class SettingsPanel(SettingsPanelTemplate):
 
     def _volume(self, event):
         dr.set_volume(float(getattr(self.dom_nodes["volume"], "value") or 0.8))
+
+    def _latency(self):
+        try:
+            return max(0, min(300, int(dr.settings().get("latency") or 0)))
+        except Exception:
+            return 0
+
+    def _set_latency(self, ms):
+        dr.set_setting("latency", max(0, min(300, int(ms))))
+        self._draw()
+        self.raise_event("changed")
+
+    @handle("lat_down", "click")
+    def lat_down_click(self, **event_args):
+        self._set_latency(self._latency() - 10)
+
+    @handle("lat_up", "click")
+    def lat_up_click(self, **event_args):
+        self._set_latency(self._latency() + 10)
+
+    @handle("cal_button", "click")
+    def cal_button_click(self, **event_args):
+        dr.sfx("click")
+        from ...Dialogs.Calibrate import Calibrate
+        ms = alert(Calibrate(current=self._latency()), buttons=[], role="app-dialog", dismissible=True)
+        if isinstance(ms, int):
+            self._set_latency(ms)
 
     @handle("midi_button", "click")
     def midi_button_click(self, **event_args):

@@ -3,7 +3,7 @@ import anvil.js
 from anvil.js import window
 
 from ._anvil_designer import LandingTemplate
-from ... import auth, dr, game, router, state
+from ... import auth, dr, game, homework, router, state
 
 # The app's video on the Addanapp YouTube channel (APP_MAKER/youtube/manifest.json), shown in the Watch section.
 YT_VIDEO = "RXNcbqR-jRs"
@@ -27,6 +27,16 @@ class Landing(LandingTemplate):
         self.continue_button.visible = bool(me)
         self.signout_button.visible = bool(me)
         self.signup_link.visible = not me
+        # The Song Shelf's door: Jingle Bells in the Christmas season (Nov 15 - Jan 10), the shelf the rest of the year
+        md = dr.today()[5:]
+        self._xmas = md >= "11-15" or md <= "01-10"
+        self.song_button.text = "🎄 Play Jingle Bells now" if self._xmas else "🎵 Play a song now"
+        hw = homework.stored()
+        self.hw_link.visible = hw is not None
+        if hw is not None:
+            self.hw_link.text = "📋 Homework from %s" % homework.teacher_name(hw["hw"])
+            self.hw_link.url = "#hw"
+            state.set_attr(self.hw_link, "target", None)
         self._midi()
 
     def _midi(self):
@@ -60,6 +70,14 @@ class Landing(LandingTemplate):
     def begin_button_click(self, **event_args):
         dr.sfx("click")
         router.go("map")
+
+    @handle("song_button", "click")
+    def song_button_click(self, **event_args):
+        dr.sfx("click")
+        if self._xmas:
+            router.go("play", "song", "jingle-bells", "learn")
+        else:
+            router.go("songs")
 
     @handle("continue_button", "click")
     def continue_button_click(self, **event_args):

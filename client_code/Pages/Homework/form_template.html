@@ -1,0 +1,38 @@
+<anvil-form layout="Doremi_Road.Layouts.Shell">
+  <anvil-block slot="content">
+    <div class="g-page hw-page">
+      <div class="hw-main" anvil:name="main_box">
+        <anvil-component type="Label" name="preview_label" prop:role='["hw-preview"]' prop:text="Preview: this is what your student sees. Opening it here doesn't save it in your browser."></anvil-component>
+        <anvil-component type="Label" name="title_label" prop:role='["page-title"]'></anvil-component>
+        <anvil-component type="Label" name="due_label" prop:role='["lede"]'></anvil-component>
+        <anvil-component type="Label" name="note_label" prop:role='["hw-note"]'></anvil-component>
+        <div class="hw-progress">
+          <span class="bar" aria-hidden="true"><i anvil:dom-node="bar"></i></span>
+          <anvil-component type="Label" name="progress_label" prop:role='["hw-count"]'></anvil-component>
+        </div>
+        <anvil-component type="Label" name="done_label" prop:role='["hw-done"]' prop:text="🎉 All done! Send your teacher your week from My practice week."></anvil-component>
+        <anvil-component type="RepeatingPanel" name="tasks_panel" prop:item_template="Doremi_Road.Items.HwTask" prop:role='["hw-list"]'></anvil-component>
+        <div class="hw-actions">
+          <a class="ui-btn primary lg" href="#report">📊 My practice week</a>
+          <anvil-component type="Button" name="remove_button" prop:text="Remove this homework" prop:role='["btn", "btn-ghost"]'></anvil-component>
+        </div>
+        <p class="small muted hw-privacy">This checklist lives in this browser and ticks itself as you play. Nothing goes to your teacher until you press "Send to my teacher" on your practice week.</p>
+      </div>
+      <div class="hw-state" anvil:name="empty_box">
+        <h1 class="page-h">No homework yet</h1>
+        <p class="muted">When your piano teacher sends you a Doremi Road link, open it and your checklist shows up here. It ticks itself as you play.</p>
+        <div class="hw-actions">
+          <a class="ui-btn primary lg" href="#songs">🎵 Play a song</a>
+          <a class="ui-btn lg" href="#teacher">I'm a teacher: make homework</a>
+        </div>
+      </div>
+      <div class="hw-state" anvil:name="broken_box">
+        <h1 class="page-h">This link is broken</h1>
+        <p class="muted">Part of it may be missing: links sometimes get cut when they're copied. Ask your teacher to send it again, or copy the whole thing.</p>
+        <div class="hw-actions">
+          <a class="ui-btn primary lg" href="#songs">🎵 Play a song meanwhile</a>
+        </div>
+      </div>
+    </div>
+  </anvil-block>
+</anvil-form>

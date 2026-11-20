@@ -583,7 +583,8 @@
         meter(-0.09);
       }
       function press(m, at) {
-        var t = at == null ? now() : at, best = null, bd = 1e9;
+        // Timing setting (Settings > Timing): Bluetooth speakers and TVs make taps land late; take that back off.
+        var t = at == null ? now() - scale * (+DR.settings.latency || 0) / 1000 : at, best = null, bd = 1e9;
         evs.forEach(function (e) {
           if (e.done) return;
           var dt = t - e.t;

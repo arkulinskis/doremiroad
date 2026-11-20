@@ -8,7 +8,8 @@ description: Context, workflow and recipes for Doremi Road (folder doremiroad-fo
 **What it is:** a piano-learning game. 9 territories × 4-5 levels (42) on a knowledge map; levels are lists of steps
 (lesson, notes, chords, progression, rush, ear, quiz). Collectables: codex pages, composer cards, crests, badges,
 ranks, shop skins/trails/banners, daily practice streaks. Guest play + accounts, leaderboards, Practice Room, level
-editor at `#admin`. Aimed a bit older than Busy Bun (teens/adults).
+editor at `#admin`. Aimed a bit older than Busy Bun (teens/adults); the
+2026-11-20 round (Song Shelf, homework links) leans toward kids who got a keyboard for Christmas and their teachers.
 
 **Where it lives:**
 - Folder `C:\Users\arkvi\Documents\CLAUDE\doremiroad-forms\` = the git clone of **github.com/arkulinskis/doremiroad**,
@@ -45,12 +46,15 @@ client_code/
   game.py        game state: game.S, guest progress in localStorage `dr.guest`, guest_* server twins,
                  signed_in() -> import_guest
   Layouts/Shell  header (hidden on #landing: no-header; everything hidden on #play: no-chrome), footer (4 links)
-  Pages/         Landing, Map, Codex, Collection, Practice, Badges, Shop, Play (#play/<key>, #play/daily), Auth, Admin
+  homework.py    homework links (#hw/<code>) + weekly report (#report, #r/<code>): codes, ticks, week summary
+  Pages/         Landing, Map, Songs, Codex, Collection, Practice, Badges, Shop, Play (#play/<key>[/75|50],
+                 #play/daily, #play/song/<key>/<mode>), Teacher, Homework, Report, Auth, Admin
   Components/    Stage (the level runner), Keys (piano), KnowledgeMap, Art, TitleScene, SettingsPanel
   Items/         level/step/badge/shop/codex/composer tiles, board + admin rows
   Dialogs/       Results, Pause, Fail (opened from the Stage's events), LevelCard, DailyCard, CodexPage,
                  ComposerView, Profile, Settings, LevelJson
 server_code/     Game.py (apply_* rules + callables + guest_* twins), Levels.py (built-in levels, check, _step_items),
+                 Songs.py (Song Shelf melodies; level(key, mode) builds learn/practice/perform levels),
                  Music.py, Catalog.py, Admin.py, Accounts.py, SchemaCheck, legal_server, seo_routes
 theme/assets/    dr-core.js (DR.Sound synth, DR.Input = MIDI + computer keys + touch, DR.settings), dr-music.js
                  (theory; must match Music.py), dr-art.js (map, crests, medallions, title scene), dr-engine.js
@@ -77,6 +81,15 @@ theme/assets/    dr-core.js (DR.Sound synth, DR.Input = MIDI + computer keys + t
 
 ## Recipes
 
+- **New song:** add it to `SONGS` in server_code/Songs.py (public domain only, melody only, Music.parse_seq format; the
+  key is permanent because progress is stored under it). Practice = 70% tempo, Learn phrases are cut automatically.
+  Ask the user to check new melodies by ear.
+- **Practice log / homework:** `progress.log` = {date: {s, r, c}} written by `Game._log` (finished runs in apply_*,
+  failed/quit runs and Practice Room sessions through `log_practice`). Cleared keys `l:<level>`, `d`, `s:<song>:<mode>`
+  are also homework task codes (client_code/homework.py). Never put student data on the server: codes ride in links.
+- **Slowed runs:** `result.speed` (0.5-1, set by Pages/Play; Stage.start multiplies rush bpm) caps stars at 1, skips
+  best/score and the leaderboard (apply_finish, finish_level).
+
 - **New codex page / composer / badge / shop item:** Catalog.py (badge test in `Game.check_badges` unless it's a
   `stat`+`at` badge). A codex page or card must be given by exactly one level (server test).
 - **New step type:** Levels (`STEP_TYPES`, `_step_items`, `check`), Admin `_clean_step`, dr-engine.js runner +
@@ -85,6 +98,11 @@ theme/assets/    dr-core.js (DR.Sound synth, DR.Input = MIDI + computer keys + t
 - **New page:** template-forms recipe; add its address to tools/ui/smoke.js.
 
 ## Gotchas
+
+- Timing: `DR.settings.latency` (ms) is subtracted in runRush `press()` (scaled by debug timeScale). Calibrate =
+  `DR.UI.calibrate` in dr-ui.js; it listens to keydown on window (capture) only while running.
+- NAV entries are (page, label, icon, short label); phones show the short label. Shell inserts a Homework tab while
+  this browser holds a homework.
 
 - A `role` on a custom HTML-form component (Keys, Art) is not applied on the App Server: wrap it in a div with a class.
 - The --c-* tokens are the old --dr-* palette; the engines still read --dr-*: keep both.

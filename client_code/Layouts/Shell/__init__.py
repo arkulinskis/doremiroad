@@ -3,7 +3,7 @@ import datetime
 from anvil import *
 
 from ._anvil_designer import ShellTemplate
-from ... import dr, game, router, state
+from ... import dr, game, homework, router, state
 
 
 class Shell(ShellTemplate):
@@ -24,8 +24,13 @@ class Shell(ShellTemplate):
                              "no-header": page == "landing", "is-admin-page": page == "admin"})
         loaded = game.ready()
         dot = loaded and game.can_buy_any()
-        self.nav_panel.items = [{"page": p, "label": label, "icon": icon, "on": p == page, "dot": p == "shop" and dot}
-                                for p, label, icon in router.NAV]
+        items = [{"page": p, "label": label, "short": short, "icon": icon, "on": p == page, "dot": p == "shop" and dot}
+                 for p, label, icon, short in router.NAV]
+        hw = homework.open_homework()
+        if hw is not None:  # a homework link was opened in this browser: its tab, with a dot until it's all done
+            items.insert(2, {"page": "hw", "label": "Homework", "short": "Homework", "icon": "list",
+                             "on": page == "hw", "dot": bool(hw["open"])})
+        self.nav_panel.items = items
         self.me_box.visible = loaded or bool(me)
         self.guest_box.visible = not me and page not in ("auth",)
         self.rank_link.visible = loaded

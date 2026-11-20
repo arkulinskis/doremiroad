@@ -10,7 +10,7 @@ class Results(ResultsTemplate):
     pages, composer cards, badges, rank, conquest). A codex page or card opens its own dialog. Closes with "next",
     "again" or "map"; next_key / next_terr / map_terr tell the Play page where to go."""
 
-    def __init__(self, report=None, key=None, name="", **properties):
+    def __init__(self, report=None, key=None, name="", where="", next_text="", back_text="", **properties):
         super().__init__(**properties)
         rep = report or {}
         self._rep = rep
@@ -18,16 +18,24 @@ class Results(ResultsTemplate):
         self.title_label.text = name
         state.heading(self.title_label, 2)
         x = game.find_level(key) if key else None
-        self.where_label.text = "Daily Practice" if key is None else (x["t"]["name"] if x else "")
+        self.where_label.text = where or ("Daily Practice" if key is None else (x["t"]["name"] if x else ""))
         self.stars_sr.text = "%d of 3 stars" % rep.get("stars", 0)
         self.acc_label.text = "%d%%" % round(rep.get("accuracy") or 0)
         self.acc_note.text = "accuracy" + (" · new best" if rep.get("new_best") else "")
         self.score_label.text = dr.fmt(rep.get("score"))
         self.combo_box.visible = bool(rep.get("combo"))
         self.combo_label.text = str(rep.get("combo") or "")
-        self.claimed_box.visible = bool(rep.get("first_clear"))
+        self.claimed_box.visible = bool(rep.get("first_clear")) and bool(rep.get("level"))
 
         gains: list = []
+        if rep.get("slow"):
+            gains.append({"icon": "🐢", "title": "Cleared at %d%% speed" % round((rep.get("speed") or 1) * 100),
+                          "text": "A slower run earns one star and posts no score. Play at full speed for ★★ and ★★★."})
+        for t in rep.get("hw_ticked") or []:
+            gains.append({"icon": "📋", "title": "Homework ticked: " + t, "text": rep.get("hw_count") or "", "gold": True})
+        if rep.get("song") and rep.get("first_clear"):
+            gains.append({"icon": "🎵", "title": "New on your Song Shelf",
+                          "text": "First clear of this way to play it. Best: " + game.stars_text(rep.get("best_stars") or 0)})
         if rep.get("repeat"):
             gains.append({"icon": "🔁", "title": "Practice run", "text": "Today's rewards are already yours. Come back tomorrow."})
         if rep.get("xp"):
@@ -84,9 +92,11 @@ class Results(ResultsTemplate):
         self.next_key = nxt["l"]["key"] if nxt else None
         self.next_terr = nxt["t"]["key"] if nxt else None
         self.map_terr = (unlocked_terr or (x["t"] if x else None) or {}).get("key")
-        self.next_button.visible = nxt is not None
-        self.next_button.text = ("Next: %s ▸" % nxt["l"]["name"]) if nxt else ""
-        self.map_button.role = ["btn", "btn-lg"] if nxt else ["btn", "btn-primary", "btn-lg"]
+        self.next_button.visible = nxt is not None or bool(next_text)
+        self.next_button.text = next_text or (("Next: %s ▸" % nxt["l"]["name"]) if nxt else "")
+        self.map_button.role = ["btn", "btn-lg"] if self.next_button.visible else ["btn", "btn-primary", "btn-lg"]
+        if back_text:
+            self.map_button.text = back_text
         self._conq = conq is not None
 
     @handle("", "show")

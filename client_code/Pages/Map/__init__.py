@@ -85,8 +85,10 @@ class Map(MapTemplate):
     def _level(self, key, **event_args):
         dr.sfx("click")
         from ...Dialogs.LevelCard import LevelCard
-        if alert(LevelCard(key=key), buttons=[], large=True, role="app-dialog", dismissible=True) == "play":
-            router.go("play", key)
+        choice = alert(LevelCard(key=key), buttons=[], large=True, role="app-dialog", dismissible=True)
+        if isinstance(choice, str) and choice.startswith("play"):
+            speed = choice.split(":")[1] if ":" in choice else None
+            router.go("play", key, speed)
 
     @handle("daily_button", "click")
     def daily_button_click(self, **event_args):

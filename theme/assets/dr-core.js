@@ -49,9 +49,21 @@
   DR.fmt = function (n) { return Math.round(n).toLocaleString('en-US'); };
 
   /* Player settings, kept in this browser. */
-  var SETTINGS_DEFAULT = { sfx: true, ambient: true, keySound: true, midiSound: false, labels: 'c', letters: true, volume: 0.8, metronome: true, touch: 'auto' };
+  var SETTINGS_DEFAULT = { sfx: true, ambient: true, keySound: true, midiSound: false, labels: 'c', letters: true, volume: 0.8, metronome: true, touch: 'auto', latency: 0 };
   DR.settings = Object.assign({}, SETTINGS_DEFAULT, DR.store.get('dr.settings', {}));
   DR.saveSettings = function () { DR.store.set('dr.settings', DR.settings); };
+  /* Share links (homework, reports): JSON text <-> base64url (no '/', '+' or '='), UTF-8 safe. */
+  DR.b64e = function (text) {
+    var bin = unescape(encodeURIComponent(String(text)));
+    return btoa(bin).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+  };
+  DR.b64d = function (code) {
+    try {
+      var b = String(code || '').replace(/-/g, '+').replace(/_/g, '/');
+      while (b.length % 4) b += '=';
+      return decodeURIComponent(escape(atob(b)));
+    } catch (e) { return null; }
+  };
 
   /* Touch-screen piano: bigger keys, tap hints instead of computer-key hints, octave buttons.
      settings.touch: 'auto' (when the main pointer is a finger: tablets, phones), 'on' or 'off'. <html> gets .dr-touch. */
@@ -182,6 +194,27 @@
   Sound.noteOff = function (midi) {
     var v = Sound.voices[midi];
     if (v) { v.release(); delete Sound.voices[midi]; }
+  };
+  /* Hear a melody in its rhythm (the Song Shelf's "Hear it"): a rush sequence at a tempo. One preview at a time;
+     Sound.stopPreview() cuts it. Returns the length in seconds. */
+  Sound.preview = function (seq, bpm, maxBeats) {
+    Sound.stopPreview();
+    if (!Sound.init() || !DR.Music) return 0;
+    var p = DR.Music.parseSeq(seq), spb = 60 / (bpm || 90), t0 = Sound.ctx.currentTime + 0.08, end = 0, vs = [];
+    (p ? p[0] : []).forEach(function (e) {
+      if (maxBeats && e.t >= maxBeats) return;
+      e.notes.forEach(function (m) {
+        var at = t0 + e.t * spb, v = voice(m, 0.7, at);
+        v.release(at + Math.max(0.12, e.d * spb * 0.92)); vs.push(v);
+      });
+      end = Math.max(end, (e.t + e.d) * spb);
+    });
+    Sound.previewVoices = vs;
+    return end;
+  };
+  Sound.stopPreview = function () {
+    (Sound.previewVoices || []).forEach(function (v) { try { v.release(); } catch (e) {} });
+    Sound.previewVoices = [];
   };
   // Play notes for listening: items are MIDI numbers or arrays (chords). Returns the duration in seconds.
   Sound.play = function (items, opts) {

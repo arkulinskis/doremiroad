@@ -33,6 +33,13 @@ toolbox_item:
     <button type="button" anvil:name="labels_c" data-v="c" anvil:on-dom:click="self.labels_click">C only</button>
     <button type="button" anvil:name="labels_all" data-v="all" anvil:on-dom:click="self.labels_click">All</button>
   </div>
+  <span>Timing<span class="sub">Bluetooth speakers, headphones and TVs can play late. If on-time notes score GOOD instead of PERFECT, calibrate.</span></span>
+  <span class="pf-timing">
+    <anvil-component type="Button" name="lat_down" prop:text="−" prop:role='["btn", "btn-sm", "pf-step"]'></anvil-component>
+    <anvil-component type="Label" name="lat_label" prop:role='["pf-lat"]'></anvil-component>
+    <anvil-component type="Button" name="lat_up" prop:text="+" prop:role='["btn", "btn-sm", "pf-step"]'></anvil-component>
+    <anvil-component type="Button" name="cal_button" prop:text="Calibrate" prop:role='["btn", "btn-sm"]'></anvil-component>
+  </span>
   <span>Volume</span>
   <input type="range" min="0" max="1" step="0.05" anvil:dom-node="volume" aria-label="Volume">
   <span>MIDI keyboard<anvil-component type="Label" name="midi_label" prop:role='["sub"]'></anvil-component></span>

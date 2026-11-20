@@ -1,0 +1,31 @@
+<anvil-form layout="Doremi_Road.Layouts.Shell">
+  <anvil-block slot="content">
+    <div class="g-page sg-page">
+      <anvil-component type="Label" name="title_label" prop:role='["page-title"]' prop:text="Song Shelf"></anvil-component>
+      <anvil-component type="Label" name="lede_label" prop:role='["lede"]' prop:text="Songs you know, open from the very first minute. Pick one and play."></anvil-component>
+      <div anvil:name="shelves_box">
+        <ul class="sg-how" aria-label="Three ways to play every song">
+          <li><span class="sg-ic" aria-hidden="true">🐢</span><span><b>Learn</b> Phrase by phrase. The glowing key waits for you.</span></li>
+          <li><span class="sg-ic" aria-hidden="true">🎯</span><span><b>Practice</b> Falling notes at 70% speed, with their names.</span></li>
+          <li><span class="sg-ic" aria-hidden="true">⭐</span><span><b>Perform</b> The real tempo. Three stars for the brave.</span></li>
+        </ul>
+        <div class="g-sec">
+          <anvil-component type="Label" name="xmas_title" prop:role='["sec-title"]' prop:text="🎄 Christmas"></anvil-component>
+          <anvil-component type="Label" name="xmas_count" prop:role='["sec-count"]'></anvil-component>
+        </div>
+        <anvil-component type="RepeatingPanel" name="xmas_panel" prop:item_template="Doremi_Road.Items.SongCard" prop:role='["sg-grid"]'></anvil-component>
+        <div class="g-sec">
+          <anvil-component type="Label" name="fav_title" prop:role='["sec-title"]' prop:text="🎵 Favourites"></anvil-component>
+          <anvil-component type="Label" name="fav_count" prop:role='["sec-count"]'></anvil-component>
+        </div>
+        <anvil-component type="RepeatingPanel" name="fav_panel" prop:item_template="Doremi_Road.Items.SongCard" prop:role='["sg-grid"]'></anvil-component>
+        <p class="sg-foot small muted">Every song here is traditional or long out of copyright, written out for the piano melody only. Piano teacher? <a href="#teacher">Send any of these as homework</a>.</p>
+      </div>
+      <div class="sg-empty" anvil:name="failed_box">
+        <h2>The shelf didn't load</h2>
+        <p class="muted">Check your connection and try again.</p>
+        <anvil-component type="Button" name="retry_button" prop:text="Try again" prop:role='["btn", "btn-primary"]'></anvil-component>
+      </div>
+    </div>
+  </anvil-block>
+</anvil-form>

@@ -1,0 +1,11 @@
+<div class="ui dr cal">
+  <anvil-component type="Label" name="title_label" prop:role='["dlg-title"]' prop:text="Tap with the beat"></anvil-component>
+  <anvil-component type="Label" name="text_label" prop:role='["cal-text"]' prop:text="Dots fall onto the line in time with the clicks. After four count-in clicks, tap any key, a MIDI key or the box below exactly as each of the next eight dots lands. Use the speakers or headphones you play with."></anvil-component>
+  <div class="cal-pad" anvil:dom-node="pad" tabindex="0" role="button" aria-label="Tap here, or press any key, as each dot lands"></div>
+  <anvil-component type="Label" name="status_label" prop:role='["cal-status"]'></anvil-component>
+  <div class="rs-btns">
+    <anvil-component type="Button" name="start_button" prop:text="Start" prop:role='["btn", "btn-primary", "btn-lg"]'></anvil-component>
+    <anvil-component type="Button" name="save_button" prop:text="Save" prop:role='["btn", "btn-primary", "btn-lg"]'></anvil-component>
+    <anvil-component type="Button" name="cancel_button" prop:text="Cancel" prop:role='["btn", "btn-lg"]'></anvil-component>
+  </div>
+</div>

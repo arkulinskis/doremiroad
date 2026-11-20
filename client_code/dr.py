@@ -8,6 +8,8 @@
     dr.midi()               {status, inputs} of the MIDI connection; dr.enable_midi() asks the browser
     dr.art_*                SVG strings drawn by dr-art.js / dr-ui.js (map, crest, medallion, shop previews)
     dr.fmt(n)               1,234
+    dr.b64e(x) / b64d(code) a share-link code: JSON in base64url (homework and report links); b64d gives None if broken
+    dr.preview(seq, bpm)    hear a melody in its rhythm; dr.stop_preview()
 """
 import json
 
@@ -176,3 +178,35 @@ def pretty_notes(notes):
 
 def report(fn):
     return anvil.js.report_exceptions(fn)
+
+
+def b64e(x):
+    return str(window.DR.b64e(json.dumps(x, separators=(",", ":"))))
+
+
+def b64d(code):
+    text = window.DR.b64d(str(code or ""))
+    if not text:
+        return None
+    try:
+        return json.loads(str(text))
+    except Exception:
+        return None
+
+
+def preview(seq, bpm, max_beats=0):
+    try:
+        return float(window.DR.Sound.preview(seq, bpm, max_beats) or 0)
+    except Exception:
+        return 0.0
+
+
+def stop_preview():
+    try:
+        window.DR.Sound.stopPreview()
+    except Exception:
+        pass
+
+
+def now_ms():
+    return float(window.performance.now())

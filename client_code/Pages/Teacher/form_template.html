@@ -1,0 +1,72 @@
+<anvil-form layout="Doremi_Road.Layouts.Shell">
+  <anvil-block slot="content">
+    <div class="g-page tc-page">
+      <anvil-component type="Label" name="title_label" prop:role='["page-title"]' prop:text="Send homework in one link"></anvil-component>
+      <anvil-component type="Label" name="lede_label" prop:role='["lede"]' prop:text="Pick up to six things to play, set a weekly goal and a due date. Your student opens the link on any phone, tablet or computer: no account, no app, and nothing about them is saved on our server. Their checklist ticks itself as they play, and they can send you their week in one tap."></anvil-component>
+      <div class="tc-grid" anvil:name="main_box">
+        <section class="dr-card tc-card">
+          <h2 class="sec-h">1 · What to play</h2>
+          <div class="ui-seg tc-kinds" role="group" aria-label="Kind of task">
+            <button type="button" anvil:name="k_song" data-v="song" anvil:on-dom:click="self.kind_click">🎵 A song</button>
+            <button type="button" anvil:name="k_level" data-v="level" anvil:on-dom:click="self.kind_click">🗺️ A road level</button>
+            <button type="button" anvil:name="k_daily" data-v="daily" anvil:on-dom:click="self.kind_click">📜 Daily Practice</button>
+          </div>
+          <label class="ui-field" anvil:name="item_field"><span anvil:dom-node="item_caption">Song</span><anvil-component type="DropDown" name="item_drop"></anvil-component></label>
+          <div class="tc-modes" anvil:name="mode_field">
+            <span class="tc-cap">How</span>
+            <div class="ui-seg" role="group" aria-label="How to play the song">
+              <button type="button" anvil:name="m_learn" data-v="learn" anvil:on-dom:click="self.mode_click">🐢 Learn</button>
+              <button type="button" anvil:name="m_practice" data-v="practice" anvil:on-dom:click="self.mode_click">🎯 Practice</button>
+              <button type="button" anvil:name="m_perform" data-v="perform" anvil:on-dom:click="self.mode_click">⭐ Perform</button>
+            </div>
+          </div>
+          <anvil-component type="Label" name="daily_note" prop:role='["tc-note"]' prop:text="Ticks once the student finishes any day's Daily Practice after you send the link."></anvil-component>
+          <anvil-component type="Button" name="add_button" prop:text="＋ Add to the homework" prop:role='["btn"]'></anvil-component>
+          <anvil-component type="RepeatingPanel" name="tasks_panel" prop:item_template="Doremi_Road.Items.HwTask" prop:role='["hw-list"]'></anvil-component>
+          <anvil-component type="Label" name="tasks_empty" prop:role='["tc-empty"]' prop:text="Nothing added yet. Add up to six songs, levels or the Daily Practice."></anvil-component>
+        </section>
+
+        <section class="dr-card tc-card">
+          <h2 class="sec-h">2 · Goal, due date, note</h2>
+          <div class="tc-goal">
+            <span>Practise</span>
+            <anvil-component type="DropDown" name="mins_drop"></anvil-component>
+            <span>on</span>
+            <anvil-component type="DropDown" name="days_drop"></anvil-component>
+          </div>
+          <label class="ui-field"><span>Due</span><anvil-component type="DropDown" name="due_drop"></anvil-component></label>
+          <label class="ui-field"><span>Your name, as students see it</span><anvil-component type="TextBox" name="name_box" prop:placeholder="Ms Lee"></anvil-component></label>
+          <label class="ui-field"><span>A note <em>(optional)</em></span><anvil-component type="TextArea" name="note_box" prop:placeholder="Hands separately first, then together. Count out loud!"></anvil-component></label>
+          <anvil-component type="Label" name="error_label" prop:role='["msg-error"]'></anvil-component>
+          <anvil-component type="Button" name="make_button" prop:text="Make the link" prop:role='["btn", "btn-primary", "btn-lg", "btn-block"]'></anvil-component>
+
+          <div class="tc-result" anvil:name="result_box">
+            <h3 class="tc-h3">3 · Send it</h3>
+            <anvil-component type="TextBox" name="link_box" prop:role='["tc-link"]'></anvil-component>
+            <div class="tc-btns">
+              <anvil-component type="Button" name="copy_button" prop:text="Copy link" prop:role='["btn", "btn-primary"]'></anvil-component>
+              <anvil-component type="Button" name="share_button" prop:text="Share…" prop:role='["btn"]'></anvil-component>
+              <a class="ui-btn" anvil:dom-node="preview_link" href="#hw">See what they see</a>
+            </div>
+            <anvil-component type="Label" name="copied_label" prop:role='["tc-note"]'></anvil-component>
+          </div>
+        </section>
+      </div>
+
+      <section class="tc-how">
+        <h2 class="sec-h">How it works</h2>
+        <ol class="how">
+          <li><b>You make a link</b> on this page and text, email or post it to your student (or their parent).</li>
+          <li><b>They open it and play.</b> The checklist lives in their browser and ticks itself when a song or level is cleared. The minutes they play are counted for real, so there's no log to fill in.</li>
+          <li><b>They send their week back.</b> On "My practice week" they press Send to my teacher, or print one page with a line for a parent's initials. The report is a link too: open it and you see their minutes per day, what they cleared and the homework ticks.</li>
+        </ol>
+        <p class="small muted">Nothing about your students is stored on Doremi Road's server: the homework and the report both travel inside their links. Doremi Road is a practice companion, not a replacement for your lessons.</p>
+      </section>
+      <div class="sg-empty" anvil:name="failed_box">
+        <h2>The songs and levels didn't load</h2>
+        <p class="muted">Check your connection and try again.</p>
+        <anvil-component type="Button" name="retry_button" prop:text="Try again" prop:role='["btn", "btn-primary"]'></anvil-component>
+      </div>
+    </div>
+  </anvil-block>
+</anvil-form>

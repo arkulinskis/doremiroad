@@ -6,11 +6,12 @@ from ... import dr, game, state
 
 class LevelCard(LevelCardTemplate):
     """The level card (from the map): what the level teaches, your best, rewards, the leaderboard, Play.
-    Closes with "play" when Play is pressed."""
+    Levels with a rush step get a speed choice (100 / 75 / 50%). Closes with "play", or "play:75" / "play:50"."""
 
     def __init__(self, key="", **properties):
         super().__init__(**properties)
         self._key = key
+        self._speed = 100
         x = game.find_level(key)
         if x is None:
             return
@@ -46,6 +47,20 @@ class LevelCard(LevelCardTemplate):
             rewards.append({"icon": "✨", "text": "XP and ducats"})
         self.rewards_panel.items = rewards
         self.play_button.text = ("Play again" if r["stars"] else "Play") + " ▸"
+        self.speed_box.visible = any(s.get("t") == "rush" for s in d.get("steps") or [])
+        self._draw_speed()
+
+    def _draw_speed(self):
+        for v, el in ((100, self.sp100), (75, self.sp75), (50, self.sp50)):
+            el.classes["on"] = self._speed == v
+        self.speed_note.text = ("Full speed: up to ★★★ and a leaderboard score." if self._speed == 100 else
+                                "%d%% speed clears the level and opens the next one, with one star and no "
+                                "leaderboard score. Full speed for ★★ and ★★★." % self._speed)
+
+    def speed_click(self, event):
+        dr.sfx("click")
+        self._speed = int(event.currentTarget.getAttribute("data-v"))
+        self._draw_speed()
 
     @handle("", "show")
     def form_show(self, **event_args):
@@ -66,4 +81,4 @@ class LevelCard(LevelCardTemplate):
     @handle("play_button", "click")
     def play_button_click(self, **event_args):
         dr.sfx("click")
-        self.raise_event("x-close-alert", value="play")
+        self.raise_event("x-close-alert", value="play" if self._speed == 100 else "play:%d" % self._speed)

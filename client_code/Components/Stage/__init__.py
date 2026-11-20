@@ -14,8 +14,18 @@ class Stage(StageTemplate):
         self._stage = None
         super().__init__(**properties)
 
-    def start(self, level, subtitle="", skin="classic", trail="lantern"):
+    def start(self, level, subtitle="", skin="classic", trail="lantern", speed=1.0):
+        """speed < 1 slows every rush step (its tempo times speed); the number of notes stays the same, so the server's
+        result check still matches the level."""
         self.destroy()
+        if speed < 1:
+            data = level.get("data") or {}
+            steps = []
+            for st in data.get("steps") or []:
+                if st.get("t") == "rush":
+                    st = dict(st, bpm=round(float(st.get("bpm") or 90) * speed, 1))
+                steps.append(st)
+            level = dict(level, data=dict(data, steps=steps))
         opts = dr.js({"skin": skin, "trail": trail, "subtitle": subtitle})
         opts.onPause = anvil.js.report_exceptions(lambda *a: self.raise_event("paused"))
         opts.onFinish = anvil.js.report_exceptions(self._finish)

@@ -4,7 +4,8 @@ Links in templates are plain <a href="#map">; code calls router.go("play", key).
 
     PAGES[name] = (who may open it, browser-tab title)   who: None = anyone (guests play too), "guest" = signed out
                                                         only, "admin"
-    NAV = the hub's tabs (header): (page, label, icon).
+    NAV = the hub's tabs (header): (page, label, icon, short label for phones). Layouts/Shell adds a Homework tab
+          while this browser holds a homework (homework.py).
 The JavaScript version had only two addresses: "" (the game) and #admin (the level editor); both still work.
 New page: add it to PAGES and _form() (and NAV if it is a hub tab).
 """
@@ -17,17 +18,23 @@ from . import state
 PAGES = {
     "landing": (None, "Learn piano and music theory as a game"),
     "map": (None, "The map"),
+    "songs": (None, "Song Shelf"),
     "codex": (None, "The Codex"),
     "collection": (None, "Collection"),
     "practice": (None, "Practice Room"),
     "badges": (None, "Badges"),
     "shop": (None, "The Shop"),
     "play": (None, "Playing"),
+    "teacher": (None, "Homework links for piano teachers"),
+    "hw": (None, "Homework"),
+    "report": (None, "My practice week"),
+    "r": (None, "Practice report"),
     "auth": ("guest", "Sign in"),
     "admin": ("admin", "Level editor"),
 }
-NAV = [("map", "Map", "map"), ("codex", "Codex", "book"), ("collection", "Collection", "star"),
-       ("practice", "Practice Room", "music"), ("badges", "Badges", "shield"), ("shop", "Shop", "grid")]
+NAV = [("map", "Map", "map", "Map"), ("songs", "Songs", "music", "Songs"), ("codex", "Codex", "book", "Codex"),
+       ("collection", "Collection", "star", "Cards"), ("practice", "Practice Room", "music", "Practice"),
+       ("badges", "Badges", "shield", "Badges"), ("shop", "Shop", "grid", "Shop")]
 APP_NAME = "Doremi Road"
 _r: dict = {"after": "", "listening": False, "page": None}
 
@@ -40,6 +47,18 @@ def _form(name):
     if name == "map":
         from .Pages.Map import Map
         return Map
+    if name == "songs":
+        from .Pages.Songs import Songs
+        return Songs
+    if name == "teacher":
+        from .Pages.Teacher import Teacher
+        return Teacher
+    if name == "hw":
+        from .Pages.Homework import Homework
+        return Homework
+    if name in ("report", "r"):
+        from .Pages.Report import Report
+        return Report
     if name == "codex":
         from .Pages.Codex import Codex
         return Codex
@@ -111,7 +130,7 @@ def show():
             print("leave failed: %r" % e)
     window.document.title = PAGES[name][1] + " · " + APP_NAME
     window.UI_READY = False
-    page = _form(name)(args=args)
+    page = _form(name)(args=args, page=name) if name in ("report", "r") else _form(name)(args=args)
     _r["page"] = page
     anvil.open_form(page)
     shell = getattr(page, "layout", None)

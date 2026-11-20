@@ -39,6 +39,9 @@ class Practice(PracticeTemplate):
         state.live(self.chord_label)
         self._fields()
         self._api = None
+        self._active = 0.0  # ms of real playing (gaps between notes up to 15 s) for the practice log
+        self._last = 0.0
+        self._off = None
 
     def _fields(self):
         show = self._ps["show"]
@@ -52,10 +55,24 @@ class Practice(PracticeTemplate):
         if game.ready():
             ps["skin"] = game.S["progress"]["equip"].get("skins") or "classic"
         self._api = self.keys.practice(ps, self._chord, self._info, self._range)
+        self._off = dr.on_input(dr.report(self._note))
+
+    def _note(self, kind, *args):
+        if kind != "on":
+            return
+        now = dr.now_ms()
+        self._active += min(15000.0, now - self._last) if self._last else 2000.0
+        self._last = now
 
     def leave(self):
         self.keys.stop()
         self._api = None
+        if self._off is not None:
+            self._off()
+            self._off = None
+        if self._active >= 30000:  # sessions over 30 s of real playing count in the weekly report
+            game.log_practice(self._active / 1000.0, "room")
+        self._active, self._last = 0.0, 0.0
 
     # ---- engine callbacks
     def _chord(self, big, small):

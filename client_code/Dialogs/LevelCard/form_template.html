@@ -22,6 +22,15 @@
     <anvil-component type="RepeatingPanel" name="board_panel" prop:item_template="Doremi_Road.Items.BoardRow" prop:role='["lv-board"]'></anvil-component>
     <anvil-component type="Label" name="board_note" prop:role='["lv-small"]' prop:text="Loading…"></anvil-component>
   </div>
+  <div class="lv-speed" anvil:name="speed_box">
+    <span class="lv-speed-l">Speed</span>
+    <div class="ui-seg" role="group" aria-label="How fast the notes fall">
+      <button type="button" anvil:name="sp100" data-v="100" anvil:on-dom:click="self.speed_click">100%</button>
+      <button type="button" anvil:name="sp75" data-v="75" anvil:on-dom:click="self.speed_click">🐢 75%</button>
+      <button type="button" anvil:name="sp50" data-v="50" anvil:on-dom:click="self.speed_click">🐢 50%</button>
+    </div>
+    <anvil-component type="Label" name="speed_note" prop:role='["lv-small"]'></anvil-component>
+  </div>
   <div class="lv-btns">
     <anvil-component type="Button" name="play_button" prop:text="Play ▸" prop:role='["btn", "btn-primary", "btn-lg"]'></anvil-component>
   </div>
